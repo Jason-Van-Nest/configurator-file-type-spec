@@ -5,7 +5,7 @@
 **Published by:** Center for Offsite Construction (CfOC) at NYIT 
 **Specification URL:** https://centerforoffsiteconstruction.org/offsite-product-configurator-file-type/ 
 **GitHub Repository:** https://github.com/cfoc/cto-file-format  
-**License:** Apache 2.0  
+**License:** MIT 
 **Last Updated:** April 5, 2026  
 
 ---
