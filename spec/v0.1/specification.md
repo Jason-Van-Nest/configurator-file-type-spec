@@ -14,7 +14,7 @@
 
 The CTO (Configure-to-Order) file format is an open standard for encoding building configurations composed from pre-designed, pre-engineered, and pre-certified offsite construction products. Unlike traditional CAD or BIM files that represent arbitrary geometry, a `.cto` file represents a **bounded design** — a composition of catalog products that has been validated against manufacturer constraints at the point of creation.
 
-This specification defines the JSON schema, validation rules, and interchange requirements for CTO files. Version 1.1.0 introduces comprehensive product performance attributes, interface standard conformance tracking, and a complete chain-of-custody framework that documents the legal transition from goods to real property.
+This specification defines the JSON schema, validation rules, and interchange requirements for CTO files. Version 0.1.0 introduces comprehensive product performance attributes, interface standard conformance tracking, and a complete chain-of-custody framework that documents the legal transition from goods to real property.
 
 ---
 
@@ -145,7 +145,7 @@ CTO files MAY be compressed using gzip. Compressed files SHOULD use the `.cto.gz
 A CTO file is a JSON object with the following top-level keys:
 ```json
 {
-  "cto_version": "1.1.0",
+  "cto_version": "0.1.0",
   "cto_type": "assembly",
   "project_meta": { },
   "catalog_reference": { },
@@ -181,7 +181,7 @@ Declares the intended role of this file. Parsers MUST NOT reject a file based on
 
 ### 4.2 `cto_version` (REQUIRED)
 ```json
-"cto_version": "1.1.0"
+"cto_version": "0.1.0"
 ```
 
 The version of the CTO specification this file conforms to. Parsers MUST reject files with a major version they do not support.
@@ -565,7 +565,7 @@ See [Section 6: Chain of Custody](#6-chain-of-custody) for complete documentatio
 "validation_state": {
   "is_valid": true,
   "validated_at": "2026-04-04T16:45:00Z",
-  "validator_version": "1.1.0",
+  "validator_version": "0.1.0",
   "errors": [],
   "warnings": [
     {
@@ -901,7 +901,7 @@ Products MUST declare the interface standards to which their connection points c
     "id": "cp-north",
     "direction": "north",
     "interface_standard": "CfOC-ICC-1220",
-    "interface_versions": ["1.0.0", "1.1.0"],
+    "interface_versions": ["0.0.1", "0.1.0"],
     "connection_type": "logic_coupler",
     "gender": "male"
   }
@@ -1553,7 +1553,7 @@ When MAJOR version changes occur, CfOC will publish migration guides and, where 
 Type name: application
 Subtype name: vnd.cfoc.cto+json
 Required parameters: none
-Optional parameters: version (e.g., "1.1.0")
+Optional parameters: version (e.g., "0.1.0")
 Encoding considerations: UTF-8
 Security considerations: Standard JSON security considerations apply
 Published specification: https://centerforoffsiteconstruction.org/standards/cto-file-format
@@ -1572,7 +1572,7 @@ The `.cto` extension is associated with this MIME type.
 
 ```json
 {
-  "cto_version": "1.1.0",
+  "cto_version": "0.1.0",
   "project_meta": {
     "id": "example-001",
     "name": "Minimal Example",
@@ -1618,7 +1618,7 @@ The `.cto` extension is associated with this MIME type.
   "validation_state": {
     "is_valid": true,
     "validated_at": "2026-04-04T12:00:00Z",
-    "validator_version": "1.1.0",
+    "validator_version": "0.1.0",
     "errors": [],
     "warnings": []
   }
@@ -1676,10 +1676,10 @@ Manufacturers and software vendors may apply for CfOC certification by demonstra
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | 2026-04-04 | Initial release |
-| 1.0.1 | 2026-04-04 | Expanded `delivery_schedule` to `fulfillment_plan` |
-| 1.1.0 | 2026-04-04 | Added interface standard conformance, chain of custody, legal mateline tracking, expanded product schema with structural/thermal performance |
-| 1.2.0 | 2026-04-07 | Added `cto_type` field enabling element/assembly distinction; added `declares_interface` section for opaque nesting of element files within assembly files; added `product_source` field on `placed_elements` enabling resolution from referenced `.cto` files; added Section 7.2 validation rules for nested element resolution |
+| 0.0.0 | 2026-04-04 | Initial release |
+| 0.0.1 | 2026-04-04 | Expanded `delivery_schedule` to `fulfillment_plan` |
+| 0.1.0 | 2026-04-04 | Added interface standard conformance, chain of custody, legal mateline tracking, expanded product schema with structural/thermal performance |
+| 0.2.0 | 2026-04-07 | Added `cto_type` field enabling element/assembly distinction; added `declares_interface` section for opaque nesting of element files within assembly files; added `product_source` field on `placed_elements` enabling resolution from referenced `.cto` files; added Section 7.2 validation rules for nested element resolution |
 
 ### Appendix E: Acknowledgments
 
