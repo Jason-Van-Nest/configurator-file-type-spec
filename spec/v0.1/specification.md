@@ -1,12 +1,12 @@
 # CTO File Format Specification
 
-**Version:** 0.1.0  
+**Version:** 0.1.3  
 **Status:** Draft  
 **Published by:** Center for Offsite Construction (CfOC) at NYIT 
 **Specification URL:** https://centerforoffsiteconstruction.org/offsite-product-configurator-file-type/ 
 **GitHub Repository:** https://github.com/cfoc/cto-file-format  
 **License:** MIT 
-**Last Updated:** April 5, 2026  
+**Last Updated:** April 7, 2026  
 
 ---
 
@@ -1718,7 +1718,8 @@ Manufacturers and software vendors may apply for CfOC certification by demonstra
 | 0.0.0 | 2026-04-04 | Initial release |
 | 0.0.1 | 2026-04-04 | Expanded `delivery_schedule` to `fulfillment_plan` |
 | 0.1.0 | 2026-04-04 | Added interface standard conformance, chain of custody, legal mateline tracking, expanded product schema with structural/thermal performance |
-| 0.2.0 | 2026-04-07 | Added `cto_type` field enabling element/assembly distinction; added `declares_interface` section for opaque nesting of element files within assembly files; added `product_source` field on `placed_elements` enabling resolution from referenced `.cto` files; added Section 7.2 validation rules for nested element resolution |
+| 0.1.2 | 2026-04-07 | Added `cto_type` field enabling element/assembly distinction; added `declares_interface` section for opaque nesting of element files within assembly files; added `product_source` field on `placed_elements` enabling resolution from referenced `.cto` files; added Section 7.2 validation rules for nested element resolution |
+| 0.1.3 | 2026-04-07 | Added `published_date` and `thermal_performance` to `declares_interface`; added `price_quote` to `placed_elements` for live manufacturer pricing and ship dates at session time |
 
 ### Appendix E: Acknowledgments
 
