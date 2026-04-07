@@ -122,6 +122,8 @@ A CTO file is UTF-8 encoded JSON with the following top-level structure:
 
 Each section serves a distinct purpose in the CTO workflow. The design-time sections (`project_meta` through `roof_elements`) represent the configuration itself. The commerce sections (`pricing_snapshot` and `fulfillment_plan`) represent the business and logistics aspects. The `validation_state` section provides machine-readable quality assurance.
 
+Note: The file structure below reflects v0.1.0. See the full specification for the current schema including fields added in v0.1.2.
+
 ---
 
 ## 5. Product Schema
@@ -271,7 +273,7 @@ The CTO file format is being developed through CfOC's ANSI-accredited consensus 
 
 ### 10.1 Reference Implementation
 
-Logic Building Systems is developing a reference implementation: a web-based configurator that generates v1.1.0-compliant CTO files for single-family residential configurations.
+Logic Building Systems is developing a reference implementation: a web-based configurator that generates v0.1.0-compliant CTO files for single-family residential configurations.
 
 ### 10.2 Validation Tools
 
@@ -297,7 +299,7 @@ The CTO file format represents a new foundation for the built environment — on
 
 By encoding configurations as compositions of catalog products, the CTO format enables machine validation, real-time pricing, supply chain integration, and legal traceability. By documenting the chain of custody from factory to acceptance, it bridges the gap between commercial law (UCC) and property law (Common Law) that has long created ambiguity in offsite construction.
 
-Version 1.1.0 introduces the interface standard conformance framework that will enable multi-manufacturer interoperability, and the chain of custody system that documents the legal mateline crossing from goods to real property.
+Version 0.1.0 introduces the interface standard conformance framework that will enable multi-manufacturer interoperability, and the chain of custody system that documents the legal mateline crossing from goods to real property.
 
 The CfOC invites software developers, manufacturers, and legal professionals to engage with this draft specification. Together, we can build the digital infrastructure for a Configure-to-Order building economy.
 
