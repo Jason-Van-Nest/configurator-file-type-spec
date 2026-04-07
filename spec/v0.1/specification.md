@@ -272,6 +272,8 @@ The `declares_interface` section is the public-facing contract of an `element` f
   "display_name": "Kitchen Pod — Compact",
   "category": "pod",
   "design_line": "urban_minimalist",
+  "product_version": "2.3.0",
+  "published_date": "2026-04-01T00:00:00Z",
   "geometry": {
     "width_ft": 8,
     "length_ft": 12,
@@ -309,6 +311,13 @@ The `declares_interface` section is the public-facing contract of an `element` f
     "plumbing": { "water_inlet_size_in": 0.75, "drain_size_in": 2 },
     "hvac": { "duct_size_in": 8, "cfm_required": 150 }
   },
+  "thermal_performance": {
+    "r_value_walls": 21,
+    "r_value_ceiling": 38,
+    "r_value_floor": 19,
+    "u_factor_assembly": 0.048,
+    "climate_zone_compatibility": ["4A", "4B", "4C", "5A", "5B", "5C", "6A", "6B", "7", "8"]
+  },
   "constraints": {
     "min_adjacent_width_ft": 8,
     "max_stack_height": 1,
@@ -333,12 +342,17 @@ The `declares_interface` section is the public-facing contract of an `element` f
 | `display_name` | string | Yes | Human-readable name shown in parent configurator |
 | `category` | enum | Yes | Product category (see Section 5.2) |
 | `design_line` | enum | Yes | Aesthetic family |
+| `product_version` | semver string | Yes | Version of this product definition |
+| `published_date` | ISO 8601 timestamp | Yes | Date and time the manufacturer published this version of the product file |
 | `geometry` | object | Yes | Outer dimensions, weight, and bounding box |
 | `connection_points` | array | Yes | All connection points exposed to parent assemblies |
 | `mep_connections` | object | No | MEP interface summary (capacities only, not internal routing) |
+| `thermal_performance` | object | No | U-factor, R-values, and climate zone compatibility |
 | `constraints` | object | No | Placement rules the parent configurator must enforce |
-| `pricing` | object | Yes | Base MSRP and lead time |
+| `pricing` | object | Yes | Base MSRP and lead time at time of publishing |
 | `documentation` | object | No | Thumbnail and spec sheet for display in parent configurator |
+
+Note that `pricing` in `declares_interface` reflects the manufacturer's **published** price at the time the file was posted. Live pricing retrieved during a configurator session is recorded separately in `price_quote` on each `placed_element` (see Section 4.8).
 
 ### 4.6 `structural_grid` (REQUIRED)
 ```json
@@ -421,6 +435,19 @@ The `declares_interface` section is the public-facing contract of an `element` f
       "offset_ft": { "x": 2, "y": 4, "z": 0 }
     },
     "rotation_deg": 0,
+    "price_quote": {
+      "quoted_at": "2026-04-07T14:32:00Z",
+      "quoted_msrp": 48000,
+      "currency": "USD",
+      "quote_valid_until": "2026-04-14T23:59:00Z",
+      "estimated_ship_date": "2026-08-15",
+      "estimated_lead_time_days": 42,
+      "quote_reference": "LBS-Q-2026-04-001",
+      "quoted_by": {
+        "manufacturer": "Logic Building Systems",
+        "contact": "sales@buildwithlogic.com"
+      }
+    },
     "connections": [
       {
         "direction": "north",
@@ -445,7 +472,7 @@ The `declares_interface` section is the public-facing contract of an `element` f
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `instance_id` | UUID string | Yes | Unique identifier for this placed instance |
+| `instance_id` | UUID string | Yes | Unique identifier for this placed instance — each placement of the same product type gets its own `instance_id` |
 | `product_id` | string | Yes | Human-readable product identifier |
 | `product_source` | object | No | If present, resolves this element from a referenced `.cto` file rather than a flat catalog entry |
 | `product_source.type` | enum | Yes (if `product_source` present) | Must be `"cto_file"` in v0.1 |
@@ -456,11 +483,22 @@ The `declares_interface` section is the public-facing contract of an `element` f
 | `story` | integer | Yes | Floor level |
 | `placement` | object | Yes | Positioning information (see below) |
 | `rotation_deg` | number | Yes | Rotation in degrees |
+| `price_quote` | object | No | Live price and ship date retrieved from the manufacturer at session time. Distinct from the published price in `declares_interface.pricing`. When present, this is the offer price under UCC Article 2. |
+| `price_quote.quoted_at` | ISO 8601 timestamp | Yes (if `price_quote` present) | When the quote was retrieved |
+| `price_quote.quoted_msrp` | number | Yes (if `price_quote` present) | MSRP quoted for this specific instance at session time |
+| `price_quote.currency` | string | Yes (if `price_quote` present) | ISO 4217 currency code |
+| `price_quote.quote_valid_until` | ISO 8601 timestamp | No | Expiration of this quote |
+| `price_quote.estimated_ship_date` | date string | No | Estimated ship date if ordered today |
+| `price_quote.estimated_lead_time_days` | integer | No | Lead time in days at time of quote |
+| `price_quote.quote_reference` | string | No | Manufacturer's reference number for this quote |
+| `price_quote.quoted_by` | object | No | Manufacturer contact who provided the quote |
 | `connections` | array | Yes | Connected elements with interface standard references |
-| `options` | object | No | Product options/upgrades |
+| `options` | object | No | Product options/upgrades selected for this instance |
 | `instance_data` | object | No | Lifecycle data for this specific instance |
 
 When `product_source` is present, the parser MUST fetch and validate the referenced `.cto` file and treat its `declares_interface` section as the product definition. The interior of the referenced file is opaque to the parent — only the declared interface (connection points, dimensions, pricing, weight) is visible. `product_id` SHOULD still be populated as a human-readable identifier but is not used for catalog resolution when `product_source` is present.
+
+Multiple instances of the same product type are represented as separate entries in `placed_elements`, each with a unique `instance_id` and its own `price_quote`, `options`, and `instance_data`. This enables a home design to include three bathroom pods of the same type, for example, each with an independent quote, ship date, and eventual serial number.
 
 #### Placement Methods
 
@@ -498,6 +536,7 @@ When `product_source` is present, the parser MUST fetch and validate the referen
   }
 }
 ```
+
 
 ### 4.9 `roof_elements` (REQUIRED)
 ```json
