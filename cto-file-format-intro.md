@@ -308,7 +308,7 @@ The CfOC invites software developers, manufacturers, and legal professionals to 
 **Specification Version:** 0.1.0  
 **Whitepaper Date:** April 5, 2026  
 **Comment Period:** Open through June 30, 2026  
-**License:** Apache 2.0
+**License:** MIT
 
 ### Editors
 
