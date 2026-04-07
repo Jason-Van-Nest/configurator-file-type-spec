@@ -123,7 +123,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## License
 
-This specification is released under the **Apache 2.0 License**.
+This specification is released under the **MIT license**.
 
 See [LICENSE](LICENSE) for details.
 
