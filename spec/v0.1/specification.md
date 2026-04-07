@@ -124,7 +124,9 @@ A CTO file explicitly documents the legal status of each product instance — wh
 
 ---
 
-## 3. File Structure
+
+
+markdown## 3. File Structure
 
 ### 3.1 File Extension
 
@@ -141,12 +143,13 @@ CTO files MAY be compressed using gzip. Compressed files SHOULD use the `.cto.gz
 ### 3.4 Top-Level Structure
 
 A CTO file is a JSON object with the following top-level keys:
-
 ```json
 {
   "cto_version": "1.1.0",
+  "cto_type": "assembly",
   "project_meta": { },
   "catalog_reference": { },
+  "declares_interface": { },
   "structural_grid": { },
   "floor_cartridges": [ ],
   "placed_elements": [ ],
@@ -157,20 +160,33 @@ A CTO file is a JSON object with the following top-level keys:
 }
 ```
 
+The `cto_type` field declares the intended role of this file — whether it is a discrete design element authored by a manufacturer, or a composition of elements authored by a designer. The `declares_interface` section exposes the public-facing interface of this file when it is referenced by a parent assembly; it is required for `element` files and ignored for `assembly` files. All other sections serve their existing purposes.
+
 ---
 
 ## 4. Schema Definition
 
-### 4.1 `cto_version` (REQUIRED)
+### 4.1 `cto_type` (OPTIONAL)
+```json
+"cto_type": "assembly"
+```
 
+Declares the intended role of this file. Parsers MUST NOT reject a file based on `cto_type` alone — it is advisory, not enforced. If absent, parsers MUST treat the file as `"assembly"`.
+
+| Value | Description |
+|-------|-------------|
+| `"element"` | A discrete design unit authored by a manufacturer — a pod, panel, cartridge, or sub-assembly. SHOULD include a `declares_interface` section. |
+| `"assembly"` | A composition of elements — a home design, a building module, or a multi-unit configuration. |
+| `"template"` | A pre-validated starting-point configuration intended for user modification. Equivalent to `is_template: true` in `project_meta`. |
+
+### 4.2 `cto_version` (REQUIRED)
 ```json
 "cto_version": "1.1.0"
 ```
 
 The version of the CTO specification this file conforms to. Parsers MUST reject files with a major version they do not support.
 
-### 4.2 `project_meta` (REQUIRED)
-
+### 4.3 `project_meta` (REQUIRED)
 ```json
 "project_meta": {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -216,8 +232,7 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 | `jurisdiction` | object | No | Authority having jurisdiction details |
 | `notes` | string | No | Free-form project notes |
 
-### 4.3 `catalog_reference` (REQUIRED)
-
+### 4.4 `catalog_reference` (REQUIRED)
 ```json
 "catalog_reference": {
   "manufacturer": "Logic Building Systems",
@@ -249,8 +264,83 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 | `catalog_checksum` | string | No | Integrity hash of the catalog file |
 | `interface_standards` | array | No | CfOC interface standards used by products in this catalog |
 
-### 4.4 `structural_grid` (REQUIRED)
+### 4.5 `declares_interface` (REQUIRED for `element` files; omit for `assembly` files)
 
+The `declares_interface` section is the public-facing contract of an `element` file. When a parent assembly references this file via `product_source`, the parent parser reads only this section — the interior of the file is opaque. It exposes exactly the information a parent needs to place, connect, price, and validate the element without knowing how it is built internally.
+```json
+"declares_interface": {
+  "display_name": "Kitchen Pod — Compact",
+  "category": "pod",
+  "design_line": "urban_minimalist",
+  "geometry": {
+    "width_ft": 8,
+    "length_ft": 12,
+    "height_ft": 9,
+    "weight_lbs": 8400,
+    "bounding_box": {
+      "min": { "x": 0, "y": 0, "z": 0 },
+      "max": { "x": 8, "y": 12, "z": 9 }
+    }
+  },
+  "connection_points": [
+    {
+      "id": "cp-north",
+      "direction": "north",
+      "position_ft": { "x": 4, "y": 12, "z": 4.5 },
+      "interface_standard": "CfOC-ICC-1220",
+      "interface_versions": ["1.0.0"],
+      "connection_type": "logic_coupler",
+      "gender": "male",
+      "required": false
+    },
+    {
+      "id": "cp-south",
+      "direction": "south",
+      "position_ft": { "x": 4, "y": 0, "z": 4.5 },
+      "interface_standard": "CfOC-ICC-1220",
+      "interface_versions": ["1.0.0"],
+      "connection_type": "logic_coupler",
+      "gender": "female",
+      "required": true
+    }
+  ],
+  "mep_connections": {
+    "electrical": { "voltage": 240, "amperage": 50, "phases": 1, "circuits": 4 },
+    "plumbing": { "water_inlet_size_in": 0.75, "drain_size_in": 2 },
+    "hvac": { "duct_size_in": 8, "cfm_required": 150 }
+  },
+  "constraints": {
+    "min_adjacent_width_ft": 8,
+    "max_stack_height": 1,
+    "requires_floor_cartridge": true,
+    "compatible_roof_types": ["flat", "shed"]
+  },
+  "pricing": {
+    "base_msrp": 48000,
+    "currency": "USD",
+    "lead_time_days": 42,
+    "pricing_valid_until": "2026-12-31"
+  },
+  "documentation": {
+    "thumbnail_url": "https://buildwithlogic.com/images/pod-001-thumb.jpg",
+    "spec_sheet_url": "https://buildwithlogic.com/specs/pod-001.pdf"
+  }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `display_name` | string | Yes | Human-readable name shown in parent configurator |
+| `category` | enum | Yes | Product category (see Section 5.2) |
+| `design_line` | enum | Yes | Aesthetic family |
+| `geometry` | object | Yes | Outer dimensions, weight, and bounding box |
+| `connection_points` | array | Yes | All connection points exposed to parent assemblies |
+| `mep_connections` | object | No | MEP interface summary (capacities only, not internal routing) |
+| `constraints` | object | No | Placement rules the parent configurator must enforce |
+| `pricing` | object | Yes | Base MSRP and lead time |
+| `documentation` | object | No | Thumbnail and spec sheet for display in parent configurator |
+
+### 4.6 `structural_grid` (REQUIRED)
 ```json
 "structural_grid": {
   "derived_from": "floor_cartridges",
@@ -274,8 +364,7 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 | `unit` | enum | Yes | Unit of measurement: `ft`, `m`, or `mm` |
 | `origin` | object | No | Coordinate system origin metadata |
 
-### 4.5 `floor_cartridges` (REQUIRED)
-
+### 4.7 `floor_cartridges` (REQUIRED)
 ```json
 "floor_cartridges": [
   {
@@ -312,13 +401,18 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 | `implied_supports` | array | Yes | Structural supports generated by this cartridge |
 | `instance_data` | object | No | Lifecycle data for this specific instance |
 
-### 4.6 `placed_elements` (REQUIRED)
-
+### 4.8 `placed_elements` (REQUIRED)
 ```json
 "placed_elements": [
   {
     "instance_id": "elem-001",
     "product_id": "pod-001",
+    "product_source": {
+      "type": "cto_file",
+      "url": "https://buildwithlogic.com/products/kitchen-pod-compact.cto",
+      "cto_version": "0.1.0",
+      "checksum": "sha256:abc123..."
+    },
     "category": "pod",
     "story": 1,
     "placement": {
@@ -352,7 +446,12 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `instance_id` | UUID string | Yes | Unique identifier for this placed instance |
-| `product_id` | string | Yes | Reference to catalog product |
+| `product_id` | string | Yes | Human-readable product identifier |
+| `product_source` | object | No | If present, resolves this element from a referenced `.cto` file rather than a flat catalog entry |
+| `product_source.type` | enum | Yes (if `product_source` present) | Must be `"cto_file"` in v0.1 |
+| `product_source.url` | URL string | Yes (if `product_source` present) | Location of the referenced `.cto` element file |
+| `product_source.cto_version` | semver string | No | Expected version of the referenced file |
+| `product_source.checksum` | string | No | Integrity hash of the referenced file |
 | `category` | enum | Yes | Product category: `pod`, `wall_panel`, `floor_cartridge`, etc. |
 | `story` | integer | Yes | Floor level |
 | `placement` | object | Yes | Positioning information (see below) |
@@ -360,6 +459,8 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 | `connections` | array | Yes | Connected elements with interface standard references |
 | `options` | object | No | Product options/upgrades |
 | `instance_data` | object | No | Lifecycle data for this specific instance |
+
+When `product_source` is present, the parser MUST fetch and validate the referenced `.cto` file and treat its `declares_interface` section as the product definition. The interior of the referenced file is opaque to the parent — only the declared interface (connection points, dimensions, pricing, weight) is visible. `product_id` SHOULD still be populated as a human-readable identifier but is not used for catalog resolution when `product_source` is present.
 
 #### Placement Methods
 
@@ -383,7 +484,6 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 ```
 
 #### Connection Objects
-
 ```json
 {
   "direction": "north",
@@ -399,8 +499,7 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 }
 ```
 
-### 4.7 `roof_elements` (REQUIRED)
-
+### 4.9 `roof_elements` (REQUIRED)
 ```json
 "roof_elements": [
   {
@@ -420,8 +519,7 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 ]
 ```
 
-### 4.8 `pricing_snapshot` (REQUIRED)
-
+### 4.10 `pricing_snapshot` (REQUIRED)
 ```json
 "pricing_snapshot": {
   "calculated_at": "2026-04-04T16:45:00Z",
@@ -456,14 +554,13 @@ The version of the CTO specification this file conforms to. Parsers MUST reject 
 }
 ```
 
-### 4.9 `fulfillment_plan` (OPTIONAL)
+### 4.11 `fulfillment_plan` (OPTIONAL)
 
 The fulfillment plan captures the complete production-to-installation timeline. It is OPTIONAL because configurations may be saved before scheduling is complete, but a configuration is not considered "order-ready" until the fulfillment plan is populated and validated.
 
 See [Section 6: Chain of Custody](#6-chain-of-custody) for complete documentation of the fulfillment plan structure.
 
-### 4.10 `validation_state` (REQUIRED)
-
+### 4.12 `validation_state` (REQUIRED)
 ```json
 "validation_state": {
   "is_valid": true,
@@ -487,7 +584,6 @@ See [Section 6: Chain of Custody](#6-chain-of-custody) for complete documentatio
 }
 ```
 
----
 
 ## 5. Product Library Schema
 
@@ -1351,24 +1447,36 @@ The complete fulfillment plan integrates chain of custody with manufacturing, de
 
 ---
 
-## 7. Validation Rules
+markdown## 7. Validation Rules
 
 A conforming CTO parser MUST enforce the following validation rules before accepting a file as valid.
 
 ### 7.1 Referential Integrity
 
-- Every `product_id` MUST exist in the referenced catalog
+- Every `product_id` MUST exist in the referenced catalog, OR the element MUST have a valid `product_source` object
 - Every `connected_to` instance_id MUST exist in `placed_elements`, `floor_cartridges`, or `roof_elements`
 - The `template_id` (if present) MUST reference a valid template
 - Every `instance_id` in `fulfillment_plan` MUST exist in the configuration
 
-### 7.2 Grid Consistency
+### 7.2 Nested Element Resolution
+
+When a `placed_element` contains a `product_source` object:
+
+- The parser MUST fetch the referenced `.cto` file at `product_source.url`
+- The referenced file MUST be a valid `.cto` file with `cto_type: "element"`
+- The referenced file MUST contain a `declares_interface` section
+- If `product_source.checksum` is present, the parser MUST verify the file integrity before use
+- If `product_source.cto_version` is present, the parser MUST verify the referenced file's `cto_version` matches
+- The parser MUST use only the `declares_interface` section of the referenced file for validation — the interior is opaque
+- If the referenced file cannot be fetched or fails validation, the parent file MUST be marked invalid
+
+### 7.3 Grid Consistency
 
 - `grid_lines_x_ft` and `grid_lines_y_ft` MUST be monotonically increasing
 - All `grid_anchor` references MUST fall within valid grid index bounds
 - Floor cartridges MUST tile completely without gaps or overlaps
 
-### 7.3 Constraint Satisfaction
+### 7.4 Constraint Satisfaction
 
 - Products MUST only connect at declared `connection_points`
 - `min_adjacent_width_ft` constraints MUST be satisfied
@@ -1376,32 +1484,33 @@ A conforming CTO parser MUST enforce the following validation rules before accep
 - `requires_floor_cartridge` products MUST be placed above valid floor cartridges
 - `compatible_roof_types` constraints MUST be satisfied
 
-### 7.4 Interface Compatibility
+### 7.5 Interface Compatibility
 
 - Connected products MUST declare the same `interface_standard`
 - Connected products MUST have at least one common version in `interface_versions`
 - Connected products MUST have complementary `gender` values (male/female) or both `neutral`
 - Connected products MUST have matching `connection_type` values
+- When one or both connected elements are resolved from a `product_source`, interface compatibility MUST be validated against their respective `declares_interface.connection_points`
 
-### 7.5 Spatial Validity
+### 7.6 Spatial Validity
 
 - No two elements MAY occupy the same space (collision detection)
 - Elements MUST NOT extend beyond the building footprint
 - Multi-story elements MUST have valid structural support
 - Clearance zones MUST NOT overlap unless explicitly permitted
 
-### 7.6 Structural Performance
+### 7.7 Structural Performance
 
 - Total transmitted loads at each connection MUST NOT exceed the receiving element's capacity
 - Foundation point loads MUST NOT exceed bearing capacity
 - Seismic design category of all elements MUST be compatible with project SDC
 
-### 7.7 Thermal Performance
+### 7.8 Thermal Performance
 
 - All exterior elements MUST be compatible with the project's climate zone
 - U-factor of the assembly MUST meet IECC requirements for the climate zone
 
-### 7.8 Chain of Custody Consistency
+### 7.9 Chain of Custody Consistency
 
 When `fulfillment_plan` is present:
 
@@ -1412,7 +1521,6 @@ When `fulfillment_plan` is present:
 - `chain_of_custody` events MUST be in chronological order
 - `legal_status` MUST progress correctly: `goods` → `fixture` → `real_property`
 
----
 
 ## 8. Versioning
 
@@ -1571,6 +1679,7 @@ Manufacturers and software vendors may apply for CfOC certification by demonstra
 | 1.0.0 | 2026-04-04 | Initial release |
 | 1.0.1 | 2026-04-04 | Expanded `delivery_schedule` to `fulfillment_plan` |
 | 1.1.0 | 2026-04-04 | Added interface standard conformance, chain of custody, legal mateline tracking, expanded product schema with structural/thermal performance |
+| 1.2.0 | 2026-04-07 | Added `cto_type` field enabling element/assembly distinction; added `declares_interface` section for opaque nesting of element files within assembly files; added `product_source` field on `placed_elements` enabling resolution from referenced `.cto` files; added Section 7.2 validation rules for nested element resolution |
 
 ### Appendix E: Acknowledgments
 
