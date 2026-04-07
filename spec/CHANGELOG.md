@@ -2,6 +2,21 @@
 
 All notable changes to the Configurator File Type Specification will be documented in this file.
 
+## [0.1.3] - 2026-04-07
+
+### Added
+- `published_date` field on `declares_interface` — records when the manufacturer posted this version of the product file
+- `thermal_performance` block on `declares_interface` — exposes U-factor, R-values, and climate zone compatibility to parent assemblies
+- `price_quote` object on `placed_elements` — records live MSRP, ship date, lead time, quote expiration, and manufacturer contact retrieved from the manufacturer at configurator session time; distinct from the published price in `declares_interface.pricing`
+- Note clarifying that multiple instances of the same product type are represented as separate `placed_elements` entries, each with a unique `instance_id` and independent `price_quote` and `instance_data`
+
+### Changed
+- `declares_interface` field table updated to include `product_version`, `published_date`, and `thermal_performance`
+- `placed_elements` field table updated to include full `price_quote` schema
+
+### Fixed
+- (None)
+
 ## [0.1.2] - 2026-04-07
 
 ### Added
