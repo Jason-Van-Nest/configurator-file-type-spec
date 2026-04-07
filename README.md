@@ -23,7 +23,7 @@ The CTO file format enables seamless interoperability between Configure-to-Order
 
 ## What's Included
 
-- **[CTO File Format Specification v0.1.0](spec/v0.1/cto-file-format-spec-v0.1.0.md)** — Complete schema definition, validation rules, and examples
+- **[CTO File Format Specification v0.1.0](spec/v0.1/specification.md)** — Complete schema definition, validation rules, and examples
 - **[Contributing Guidelines](CONTRIBUTING.md)** — How to propose changes and contribute
 - **[Examples](examples/)** — Sample CTO files and templates
 - **[Change Log](spec/CHANGELOG.md)** — Version history and updates
@@ -32,7 +32,7 @@ The CTO file format enables seamless interoperability between Configure-to-Order
 
 | Resource | Link |
 |----------|------|
-| Full Specification | [spec/v0.1/cto-file-format-spec-v1.1.0.md](spec/v0.1/cto-file-format-spec-v1.1.0.md) |
+| Full Specification | [spec/v0.1/specification.md](spec/v0.1/cto-file-format-spec-v0.1.0.md) |
 | Contributing Guide | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Change Log | [spec/CHANGELOG.md](spec/CHANGELOG.md) |
 | GitHub Repository | https://github.com/Jason-Van-Nest/configurator-file-type-spec |
@@ -40,15 +40,15 @@ The CTO file format enables seamless interoperability between Configure-to-Order
 ## Getting Started
 
 ### For Specification Readers
-1. Start with the [Overview section](spec/v0.1/cto-file-format-spec-v0.1.0.md#1-introduction) of the specification
-2. Review the [Design Principles](spec/v0.1/cto-file-format-spec-v0.1.0.md#2-design-principles)
-3. Explore the [Schema Definition](spec/v0.1/cto-file-format-spec-v0.1.0.md#4-schema-definition)
+1. Start with the [Overview section](spec/v0.1/specification.md#1-introduction) of the specification
+2. Review the [Design Principles](spec/v0.1/specification.md#2-design-principles)
+3. Explore the [Schema Definition](spec/v0.1/specification.md#4-schema-definition)
 
 ### For Implementers
-1. Review the complete [Schema Definition](spec/v0.1/cto-file-format-spec-v0.1.0.md#4-schema-definition) and [Product Library Schema](spec/v0.1/cto-file-format-spec-v0.1.0.md#5-product-library-schema)
-2. Implement [Validation Rules](spec/v0.1/cto-file-format-spec-v0.1.0.md#7-validation-rules)
+1. Review the complete [Schema Definition](spec/v0.1/specification.md#4-schema-definition) and [Product Library Schema](spec/v0.1/specification.md#5-product-library-schema)
+2. Implement [Validation Rules](spec/v0.1/specification.md#7-validation-rules)
 3. Test against the [Validation Suite](https://github.com/cfoc/cto-validator) (external)
-4. Check your implementation against the [Examples](spec/v0.1/cto-file-format-spec-v0.1.0.md#10-examples)
+4. Check your implementation against the [Examples](spec/v0.1/specification.md#10-examples)
 
 ### For Contributors
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose changes, report issues, and submit improvements.
@@ -133,13 +133,14 @@ See [LICENSE](LICENSE) for details.
 - **Questions**: Open a [GitHub Discussion](https://github.com/Jason-Van-Nest/configurator-file-type-spec/discussions) (if enabled)
 - **Direct Contact**: [Submit feedback](https://github.com/Jason-Van-Nest/configurator-file-type-spec/issues/new)
 
-## Roadmap
+- ## Roadmap
 
 | Milestone | Status | Target Date |
 |-----------|--------|-------------|
-| v0.1.? Release | ✅ Complete | Summer 2026 |
+| v0.1.0 Initial Release | ✅ Complete | April 5, 2026 |
+| v0.1.2 Element/Assembly Nesting | ✅ Complete | April 7, 2026 |
 | Validation Suite | 🔄 In Progress | 2026 |
-| Reference Implementation | 📋 Planned | 2026 |
+| Reference Implementation | 🔄 In Progress | 2026 |
 | Commercial Support | 📋 Planned | 2027 |
 | v2.0 (Commercial Scope) | 📋 Planned | 2027 |
 
@@ -164,6 +165,9 @@ See [LICENSE](LICENSE) for details.
 
 ---
 
-**Last Updated:** April 5, 2026
+**Last Updated:** April 7, 2026
+
+For the latest updates, visit: https://github.com/Jason-Van-Nest/configurator-file-type-spec
+
 
 For the latest updates, visit: https://github.com/Jason-Van-Nest/configurator-file-type-spec
