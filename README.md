@@ -139,6 +139,7 @@ See [LICENSE](LICENSE) for details.
 |-----------|--------|-------------|
 | v0.1.0 Initial Release | ✅ Complete | April 5, 2026 |
 | v0.1.2 Element/Assembly Nesting | ✅ Complete | April 7, 2026 |
+| v0.1.4 Geometry Schema + Party Schema | ✅ Complete | April 9, 2026 |
 | Validation Suite | 🔄 In Progress | 2026 |
 | Reference Implementation | 🔄 In Progress | 2026 |
 | Commercial Support | 📋 Planned | 2027 |
