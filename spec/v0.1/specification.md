@@ -122,6 +122,9 @@ A CTO file encodes not only what will be built, but how, when, and by whom. The 
 
 A CTO file explicitly documents the legal status of each product instance — whether it is currently a good (governed by UCC Article 2), a fixture, or real property. The acceptance event marks the legal mateline crossing, activating warranties and completing the title transfer.
 
+### 2.8 Format-Agnostic Geometry
+
+A CTO file references geometry by URL rather than embedding it. This keeps the file lightweight and allows manufacturers to publish geometry in the formats native to their workflows. The spec defines a three-layer geometry model — Bounding Box, Model Geometry, and Drafting Geometry — each serving a distinct purpose in the design, coordination, and documentation workflow.
 ---
 
 
@@ -274,16 +277,76 @@ The `declares_interface` section is the public-facing contract of an `element` f
   "design_line": "urban_minimalist",
   "product_version": "2.3.0",
   "published_date": "2026-04-01T00:00:00Z",
+
   "geometry": {
-    "width_ft": 8,
-    "length_ft": 12,
-    "height_ft": 9,
-    "weight_lbs": 8400,
     "bounding_box": {
+      "width_ft": 8,
+      "length_ft": 12,
+      "height_ft": 9,
+      "weight_lbs": 8400,
       "min": { "x": 0, "y": 0, "z": 0 },
       "max": { "x": 8, "y": 12, "z": 9 }
+    },
+    "model_geometry": {
+      "url": "https://buildwithlogic.com/models/pod-001.gltf",
+      "format": "gltf",
+      "checksum": "sha256:abc123..."
+    },
+    "ifc": {
+      "url": "https://buildwithlogic.com/models/pod-001.ifc",
+      "ifc_version": "IFC4.3",
+      "checksum": "sha256:xyz789..."
+    },
+    "drafting_geometry": {
+      "plan": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-plan.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:def456..."
+      },
+      "elevation_front": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-front.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:ghi789..."
+      },
+      "elevation_back": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-back.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:jkl012..."
+      },
+      "elevation_left": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-left.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:mno345..."
+      },
+      "elevation_right": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-right.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:pqr678..."
+      },
+      "sections": [
+        {
+          "name": "longitudinal",
+          "url": "https://buildwithlogic.com/drawings/pod-001-section-long.svg",
+          "format": "svg",
+          "scale": "1:50",
+          "checksum": "sha256:stu901..."
+        },
+        {
+          "name": "transverse",
+          "url": "https://buildwithlogic.com/drawings/pod-001-section-trans.svg",
+          "format": "svg",
+          "scale": "1:50",
+          "checksum": "sha256:vwx234..."
+        }
+      ]
     }
   },
+
   "connection_points": [
     {
       "id": "cp-north",
@@ -324,6 +387,23 @@ The `declares_interface` section is the public-facing contract of an `element` f
     "requires_floor_cartridge": true,
     "compatible_roof_types": ["flat", "shed"]
   },
+  "manufacturer": {
+    "name": "Logic Building Systems",
+    "address": {
+      "street": "456 Industrial Park Dr",
+      "city": "Brattleboro",
+      "state": "VT",
+      "zip": "05301",
+      "country": "USA"
+    },
+    "website": "https://buildwithlogic.com",
+    "insurer": {
+      "carrier": "Hartford",
+      "policy_number": "HFD-PROD-123456",
+      "coverage_type": "products_liability",
+      "expiration_date": "2027-06-30"
+    }
+  },
   "pricing": {
     "base_msrp": 48000,
     "currency": "USD",
@@ -344,15 +424,26 @@ The `declares_interface` section is the public-facing contract of an `element` f
 | `design_line` | enum | Yes | Aesthetic family |
 | `product_version` | semver string | Yes | Version of this product definition |
 | `published_date` | ISO 8601 timestamp | Yes | Date and time the manufacturer published this version of the product file |
-| `geometry` | object | Yes | Outer dimensions, weight, and bounding box |
+| `geometry` | object | Yes | Three-layer geometry description (see below) |
+| `geometry.bounding_box` | object | Yes | Minimum rectangular volume fully containing the part, inline JSON. Used for spatial positioning, clash pre-checks, and computationally lightweight operations |
+| `geometry.model_geometry` | object | No | Higher-fidelity 3D representation referenced by URL. Supported formats: `gltf`, `glb`, `obj`, `stl`, `3dm` |
+| `geometry.ifc` | object | No | IFC model referenced by URL. Parallel to `model_geometry`; carries semantic building data beyond geometry. Always `IFC4.3` |
+| `geometry.drafting_geometry` | object | No | View-specific 2D representations referenced by URL. `plan` is required if `drafting_geometry` is present. Supported formats: `svg` (preferred), `dxf` (preferred), `dwg` (supported for compatibility) |
+| `geometry.drafting_geometry.plan` | object | Required if `drafting_geometry` present | Plan view |
+| `geometry.drafting_geometry.elevation_front` | object | No | Front elevation |
+| `geometry.drafting_geometry.elevation_back` | object | No | Back elevation |
+| `geometry.drafting_geometry.elevation_left` | object | No | Left elevation |
+| `geometry.drafting_geometry.elevation_right` | object | No | Right elevation |
+| `geometry.drafting_geometry.sections` | array | No | Array of named section views, each with `name`, `url`, `format`, `scale`, `checksum` |
 | `connection_points` | array | Yes | All connection points exposed to parent assemblies |
 | `mep_connections` | object | No | MEP interface summary (capacities only, not internal routing) |
 | `thermal_performance` | object | No | U-factor, R-values, and climate zone compatibility |
 | `constraints` | object | No | Placement rules the parent configurator must enforce |
+| `manufacturer` | object | Yes | Manufacturer identity and insurance — see Unified Party Schema (Section 5.5) |
 | `pricing` | object | Yes | Base MSRP and lead time at time of publishing |
 | `documentation` | object | No | Thumbnail and spec sheet for display in parent configurator |
 
-Note that `pricing` in `declares_interface` reflects the manufacturer's **published** price at the time the file was posted. Live pricing retrieved during a configurator session is recorded separately in `price_quote` on each `placed_element` (see Section 4.8).
+Note that `pricing` in `declares_interface` reflects the manufacturer's **published** price at time of posting. Live pricing retrieved during a configurator session is recorded separately in `price_quote` on each `placed_element` (see Section 4.8).
 
 ### 4.6 `structural_grid` (REQUIRED)
 ```json
@@ -628,8 +719,8 @@ See [Section 6: Chain of Custody](#6-chain-of-custody) for complete documentatio
 
 Product catalogs MUST conform to the following schema. This is the schema for individual products that are referenced by `product_id` in CTO files.
 
-### 5.1 Complete Product Schema
 
+### 5.1 Complete Product Schema
 ```json
 {
   "id": "pod-001",
@@ -639,38 +730,98 @@ Product catalogs MUST conform to the following schema. This is the schema for in
   "description": "Fully finished kitchen module with appliances, cabinetry, and countertops",
   "design_line": "urban_minimalist",
   "product_version": "2.3.0",
+  "published_date": "2026-04-01T00:00:00Z",
   "status": "active",
 
   "geometry": {
-    "dimensions": {
+    "bounding_box": {
       "width_ft": 8,
       "length_ft": 12,
-      "height_ft": 9
-    },
-    "weight_lbs": 8400,
-    "center_of_gravity": {
-      "x_ft": 4.0,
-      "y_ft": 6.0,
-      "z_ft": 4.2
-    },
-    "bounding_box": {
+      "height_ft": 9,
+      "weight_lbs": 8400,
+      "center_of_gravity": {
+        "x_ft": 4.0,
+        "y_ft": 6.0,
+        "z_ft": 4.2
+      },
       "min": { "x": 0, "y": 0, "z": 0 },
-      "max": { "x": 8, "y": 12, "z": 9 }
+      "max": { "x": 8, "y": 12, "z": 9 },
+      "clearance_zones": [
+        {
+          "purpose": "door_swing",
+          "min": { "x": -3, "y": 5, "z": 0 },
+          "max": { "x": 0, "y": 8, "z": 7 }
+        }
+      ]
     },
-    "clearance_zones": [
-      {
-        "purpose": "door_swing",
-        "min": { "x": -3, "y": 5, "z": 0 },
-        "max": { "x": 0, "y": 8, "z": 7 }
-      }
-    ]
+    "model_geometry": {
+      "url": "https://buildwithlogic.com/models/pod-001.gltf",
+      "format": "gltf",
+      "lod": "LOD300",
+      "checksum": "sha256:abc123..."
+    },
+    "ifc": {
+      "url": "https://buildwithlogic.com/models/pod-001.ifc",
+      "ifc_version": "IFC4.3",
+      "checksum": "sha256:xyz789..."
+    },
+    "drafting_geometry": {
+      "plan": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-plan.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:def456..."
+      },
+      "elevation_front": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-front.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:ghi789..."
+      },
+      "elevation_back": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-back.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:jkl012..."
+      },
+      "elevation_left": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-left.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:mno345..."
+      },
+      "elevation_right": {
+        "url": "https://buildwithlogic.com/drawings/pod-001-elev-right.svg",
+        "format": "svg",
+        "scale": "1:50",
+        "checksum": "sha256:pqr678..."
+      },
+      "sections": [
+        {
+          "name": "longitudinal",
+          "url": "https://buildwithlogic.com/drawings/pod-001-section-long.svg",
+          "format": "svg",
+          "scale": "1:50",
+          "checksum": "sha256:stu901..."
+        },
+        {
+          "name": "transverse",
+          "url": "https://buildwithlogic.com/drawings/pod-001-section-trans.svg",
+          "format": "svg",
+          "scale": "1:50",
+          "checksum": "sha256:vwx234..."
+        }
+      ],
+      "cad_url": "https://buildwithlogic.com/details/pod-001.dwg",
+      "cad_checksum": "sha256:yza567..."
+    }
   },
 
   "connectivity": {
     "connection_points": [
       {
-        "id": "cp-north",
-        "direction": "north",
+        "id": "cp-front",
+        "direction": "front",
         "position_ft": { "x": 4, "y": 12, "z": 4.5 },
         "interface_standard": "CfOC-ICC-1220",
         "interface_versions": ["1.0.0"],
@@ -679,8 +830,8 @@ Product catalogs MUST conform to the following schema. This is the schema for in
         "required": false
       },
       {
-        "id": "cp-south",
-        "direction": "south",
+        "id": "cp-back",
+        "direction": "back",
         "position_ft": { "x": 4, "y": 0, "z": 4.5 },
         "interface_standard": "CfOC-ICC-1220",
         "interface_versions": ["1.0.0"],
@@ -722,10 +873,10 @@ Product catalogs MUST conform to the following schema. This is the schema for in
       "wind_load_psf": 25
     },
     "transmitted_loads": {
-      "north": { "axial_lbs": 5000, "shear_lbs": 1200, "moment_ft_lbs": 800 },
-      "south": { "axial_lbs": 5000, "shear_lbs": 1200, "moment_ft_lbs": 800 },
-      "east": { "axial_lbs": 3000, "shear_lbs": 800, "moment_ft_lbs": 500 },
-      "west": { "axial_lbs": 3000, "shear_lbs": 800, "moment_ft_lbs": 500 }
+      "front": { "axial_lbs": 5000, "shear_lbs": 1200, "moment_ft_lbs": 800 },
+      "back": { "axial_lbs": 5000, "shear_lbs": 1200, "moment_ft_lbs": 800 },
+      "left": { "axial_lbs": 3000, "shear_lbs": 800, "moment_ft_lbs": 500 },
+      "right": { "axial_lbs": 3000, "shear_lbs": 800, "moment_ft_lbs": 500 }
     },
     "lateral_system_participation": true,
     "deflection_limit": "L/360",
@@ -904,10 +1055,7 @@ Product catalogs MUST conform to the following schema. This is the schema for in
       "https://buildwithlogic.com/images/pod-001-1.jpg",
       "https://buildwithlogic.com/images/pod-001-2.jpg"
     ],
-    "model_3d_url": "https://buildwithlogic.com/models/pod-001.gltf",
-    "model_bim_url": "https://buildwithlogic.com/models/pod-001.ifc",
-    "spec_sheet_url": "https://buildwithlogic.com/specs/pod-001.pdf",
-    "cad_details_url": "https://buildwithlogic.com/details/pod-001.dwg"
+    "spec_sheet_url": "https://buildwithlogic.com/specs/pod-001.pdf"
   }
 }
 ```
@@ -1161,14 +1309,102 @@ The chain of custody addresses the key questions identified in the CfOC whitepap
 
 ### 6.4 Fulfillment Plan Structure
 
-The complete fulfillment plan integrates chain of custody with manufacturing, delivery, and installation scheduling:
-
+The complete fulfillment plan integrates chain of custody with manufacturing, delivery, and installation scheduling. All party records in the fulfillment plan conform to the Unified Party Schema (Section 5.3).
 ```json
 "fulfillment_plan": {
   "plan_id": "fp-550e8400",
   "plan_status": "confirmed",
   "created_at": "2026-04-04T16:45:00Z",
   "confirmed_at": "2026-04-05T10:00:00Z",
+
+  "parties": {
+    "manufacturer": {
+      "name": "Logic Building Systems",
+      "address": {
+        "street": "456 Industrial Park Dr",
+        "city": "Brattleboro",
+        "state": "VT",
+        "zip": "05301",
+        "country": "USA"
+      },
+      "website": "https://buildwithlogic.com",
+      "insurer": {
+        "carrier": "Hartford",
+        "policy_number": "HFD-PROD-123456",
+        "coverage_type": "products_liability",
+        "expiration_date": "2027-06-30"
+      }
+    },
+    "logistics_company": {
+      "name": "Northeast Heavy Haul",
+      "address": {
+        "street": "789 Transport Way",
+        "city": "Springfield",
+        "state": "VT",
+        "zip": "05156",
+        "country": "USA"
+      },
+      "website": "https://northeastheavyhaul.com",
+      "insurer": {
+        "carrier": "Trucking Insurance Co",
+        "policy_number": "TIC-456789",
+        "coverage_type": "cargo",
+        "expiration_date": "2027-03-31"
+      }
+    },
+    "general_contractor": {
+      "name": "Smith Development LLC",
+      "address": {
+        "street": "123 Main Street",
+        "city": "Brattleboro",
+        "state": "VT",
+        "zip": "05301",
+        "country": "USA"
+      },
+      "website": "https://smithdev.com",
+      "insurer": {
+        "carrier": "Builder's Risk Mutual",
+        "policy_number": "BRM-789012",
+        "coverage_type": "builders_risk",
+        "expiration_date": "2027-06-30"
+      }
+    },
+    "hoisting_company": {
+      "name": "Green Mountain Crane Services",
+      "address": {
+        "street": "321 Crane Rd",
+        "city": "Bellows Falls",
+        "state": "VT",
+        "zip": "05101",
+        "country": "USA"
+      },
+      "website": "https://greenmountaincrane.com",
+      "insurer": {
+        "carrier": "Heavy Lift Insurers",
+        "policy_number": "HLI-234567",
+        "coverage_type": "general_liability",
+        "expiration_date": "2027-06-30"
+      }
+    },
+    "pod_installer": {
+      "name": "Logic Building Systems",
+      "address": {
+        "street": "456 Industrial Park Dr",
+        "city": "Brattleboro",
+        "state": "VT",
+        "zip": "05301",
+        "country": "USA"
+      },
+      "website": "https://buildwithlogic.com",
+      "insurer": {
+        "carrier": "Hartford",
+        "policy_number": "HFD-INST-123457",
+        "coverage_type": "general_liability",
+        "expiration_date": "2027-06-30"
+      }
+    },
+    "panel_installer": null
+  },
 
   "jobsite": {
     "address": {
@@ -1242,14 +1478,6 @@ The complete fulfillment plan integrates chain of custody with manufacturing, de
     "shipments": [
       {
         "shipment_id": "ship-001",
-        "carrier": {
-          "name": "Northeast Heavy Haul",
-          "mc_number": "MC-123456",
-          "dot_number": "DOT-789012",
-          "contact_phone": "+1-802-555-0456",
-          "insurance_carrier": "Trucking Insurance Co",
-          "insurance_policy": "TIC-456789"
-        },
         "truck": {
           "type": "flatbed",
           "length_ft": 48,
@@ -1294,8 +1522,6 @@ The complete fulfillment plan integrates chain of custody with manufacturing, de
       "type": "mobile_hydraulic",
       "capacity_tons": 100,
       "boom_length_ft": 140,
-      "provider": "Green Mountain Crane Services",
-      "contact_phone": "+1-802-555-0789",
       "operator_certification": "NCCCO-12345"
     },
     "setup": {
@@ -1345,42 +1571,27 @@ The complete fulfillment plan integrates chain of custody with manufacturing, de
   },
 
   "installation_schedule": {
-    "general_contractor": {
-      "company": "Smith Development LLC",
-      "contact_name": "Jane Smith",
-      "contact_phone": "+1-802-555-0100",
-      "license_number": "VT-GC-12345"
-    },
     "crew_assignments": [
       {
         "role": "crane_operator",
-        "provider": "Green Mountain Crane Services",
         "personnel_count": 1,
         "dates": ["2026-06-18"],
         "shift": { "start": "06:00", "end": "18:00" },
-        "certifications_required": ["NCCCO"],
-        "hourly_rate": 150,
-        "total_hours": 12
+        "certifications_required": ["NCCCO"]
       },
       {
         "role": "rigger",
-        "provider": "Green Mountain Crane Services",
         "personnel_count": 2,
         "dates": ["2026-06-18"],
         "shift": { "start": "06:00", "end": "18:00" },
-        "certifications_required": ["NCCCO Rigging"],
-        "hourly_rate": 85,
-        "total_hours": 24
+        "certifications_required": ["NCCCO Rigging"]
       },
       {
-        "role": "mep_connector",
-        "provider": "Logic Building Systems",
+        "role": "pod_installer",
         "personnel_count": 2,
         "dates": ["2026-06-18", "2026-06-19"],
         "shift": { "start": "07:00", "end": "17:00" },
-        "certifications_required": ["Licensed Plumber", "Licensed Electrician"],
-        "hourly_rate": 95,
-        "total_hours": 40
+        "certifications_required": ["Licensed Plumber", "Licensed Electrician"]
       }
     ],
     "installation_tasks": [
@@ -1399,7 +1610,7 @@ The complete fulfillment plan integrates chain of custody with manufacturing, de
         "task_id": "task-002",
         "description": "Connect MEP systems",
         "instance_ids": ["elem-001"],
-        "assigned_roles": ["mep_connector"],
+        "assigned_roles": ["pod_installer"],
         "scheduled_date": "2026-06-18",
         "scheduled_start": "11:00",
         "estimated_duration_hours": 4,
@@ -1410,7 +1621,7 @@ The complete fulfillment plan integrates chain of custody with manufacturing, de
         "task_id": "task-003",
         "description": "Commission and test systems",
         "instance_ids": ["elem-001"],
-        "assigned_roles": ["mep_connector"],
+        "assigned_roles": ["pod_installer"],
         "scheduled_date": "2026-06-19",
         "scheduled_start": "07:00",
         "estimated_duration_hours": 4,
@@ -1424,11 +1635,6 @@ The complete fulfillment plan integrates chain of custody with manufacturing, de
   },
 
   "commissioning": {
-    "commissioning_agent": {
-      "company": "Logic Building Systems",
-      "contact_name": "Technical Services",
-      "contact_phone": "+1-802-555-0150"
-    },
     "scheduled_date": "2026-06-19",
     "checklist_version": "3.2.0",
     "ahj_inspection": {
@@ -1715,11 +1921,11 @@ Manufacturers and software vendors may apply for CfOC certification by demonstra
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.0.0 | 2026-04-04 | Initial release |
-| 0.0.1 | 2026-04-04 | Expanded `delivery_schedule` to `fulfillment_plan` |
-| 0.1.0 | 2026-04-04 | Added interface standard conformance, chain of custody, legal mateline tracking, expanded product schema with structural/thermal performance |
-| 0.1.2 | 2026-04-07 | Added `cto_type` field enabling element/assembly distinction; added `declares_interface` section for opaque nesting of element files within assembly files; added `product_source` field on `placed_elements` enabling resolution from referenced `.cto` files; added Section 7.2 validation rules for nested element resolution |
+| 0.1.0 | 2026-04-05 | Initial release |
+| 0.1.1 | 2026-04-05 | Added interface standard conformance, chain of custody, legal mateline tracking, expanded product schema with structural/thermal performance |
+| 0.1.2 | 2026-04-07 | Added `cto_type` field enabling element/assembly distinction; added `declares_interface` section for opaque nesting of element files within assembly files; added `product_source` field on `placed_elements`; added Section 7.2 validation rules for nested element resolution |
 | 0.1.3 | 2026-04-07 | Added `published_date` and `thermal_performance` to `declares_interface`; added `price_quote` to `placed_elements` for live manufacturer pricing and ship dates at session time |
+| 0.1.4 | 2026-04-09 | Replaced flat geometry with three-layer schema: Bounding Box (inline, required), Model Geometry (URL, optional, formats: gltf/glb/obj/stl/3dm), IFC (parallel URL field, IFC4.3), Drafting Geometry (URL by view, plan required if present, elevations and sections optional, formats: svg/dxf/dwg); added Unified Party Schema (Section 5.3) covering manufacturer, logistics company, GC, hoisting company, pod installer, panel installer — each with name, structured address, website, and insurer fields; consolidated scattered party fields in fulfillment plan into unified `parties` block; added Design Principle 2.8 Format-Agnostic Geometry; updated connection direction naming from cardinal to relative (front/back/left/right) |
 
 ### Appendix E: Acknowledgments
 
