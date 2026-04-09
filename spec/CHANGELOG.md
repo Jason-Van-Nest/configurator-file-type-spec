@@ -2,6 +2,26 @@
 
 All notable changes to the Configurator File Type Specification will be documented in this file.
 
+## [0.1.4] - 2026-04-09
+
+### Added
+- Three-layer geometry schema: Bounding Box (inline JSON, required), Model Geometry (URL reference, optional), and IFC (parallel URL field, optional, always IFC4.3)
+- Drafting Geometry layer with named views: `plan` (required if `drafting_geometry` present), `elevation_front`, `elevation_back`, `elevation_left`, `elevation_right` (optional), and `sections` array (optional)
+- Supported geometry formats: Model Geometry — `gltf`, `glb`, `obj`, `stl`, `3dm`; Drafting Geometry — `svg` (preferred), `dxf` (preferred), `dwg` (supported for compatibility). No proprietary formats.
+- Unified Party Schema (Section 5.3) — common structure for all six party roles: manufacturer, logistics company, GC, hoisting company, pod installer, panel installer. Each party record includes name, structured address, website, and insurer (carrier, policy number, coverage type, expiration date)
+- `parties` block at top level of `fulfillment_plan` consolidating all project party records
+- Design Principle 2.8: Format-Agnostic Geometry
+- Geometry Layer Summary table (Section 5.2)
+
+### Changed
+- `geometry` block in both `declares_interface` and Product Library Schema replaced with three-layer structure
+- Connection direction naming updated from cardinal (north/south/east/west) to relative (front/back/left/right) throughout product schema and fulfillment plan
+- Scattered party fields in `fulfillment_plan` (previously in `manufacturing_schedule.factory`, `delivery_manifest.shipments[].carrier`, `crane_lift_plan.crane`, `installation_schedule.general_contractor`, `crew_assignments[].provider`) consolidated into unified `parties` block
+- Section 5.2 renamed from Category Values to Geometry Layer Summary; Category Values moved to Section 5.4; Design Line Values moved to Section 5.5; Interface Standard Conformance moved to Section 5.6
+
+### Fixed
+- (None)
+
 ## [0.1.3] - 2026-04-07
 
 ### Added
