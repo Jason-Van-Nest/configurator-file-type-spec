@@ -2,6 +2,53 @@
 
 All notable changes to the Configurator File Type Specification will be documented in this file.
 
+## [0.1.5] - 2026-04-12
+
+### Added
+
+- **Unified Party Schema**: Structured blocks for all chain-of-custody actors beyond the manufacturer. New party types: `logistics_company`, `gc_accepting_shipping`, `hoisting_company`, `pod_installer`, `panel_installer`. Each party block carries: `name`, `address`, `website`, and a structured `insurer` object.
+- **Structured Insurer Block**: Replaces informal insurance fields throughout the spec. Fields: `carrier_name`, `policy_number`, `coverage_type`, `expiration_date`.
+- **Manufacturer Party Expansion**: `catalog_reference` now includes `manufacturer_address`, `manufacturer_website`, `catalog_edition`, `catalog_url`, and `product_url`.
+- **Nominal vs. Actual Dimensions**: Products now declare both `nominal_dimensions` (the grid footprint used by the configurator for snapping and placement) and `bounding_box` (the actual physical shipping envelope). This distinction supports the LBS Chase-Generating Adjacency pattern.
+- **Chase Zones**: New `chase_zones` array in product geometry. Each zone declares `side`, `depth_ft`, and `purpose`. Chase zones represent the exterior-mounted MEP service volumes that generate service chases when two pods are placed adjacently.
+- **Installation Orientation Constraints**: New `permitted_orientation` field in product constraints. Values: `horizontal`, `vertical`, `sloped`. Prevents illegal rotations at placement time. Floor cartridges declare `horizontal`, wall panels declare `vertical`, roof panels declare `sloped` with an optional `pitch_range`.
+- **Roof Pitch Constraints**: New `pitch_range` object in product constraints for roof panels. Fields: `min_pitch` and `max_pitch` (expressed as rise/run strings, e.g., `"3/12"`). Fixed-pitch panels declare `fixed_pitch` instead.
+- **Subcategory Enum Expansion**: `wall_panel` subcategory now includes `solid`, `window`, `door`, `mixed`. `floor_cartridge` subcategory now includes `standard`, `stairwell`.
+- **Opening Geometry**: New `opening_geometry` block in product geometry for wall panels with subcategory `window`, `door`, or `mixed`. Fields: `type`, `width_ft`, `height_ft`, `offset_x_ft`, `offset_z_ft`.
+- **Cartridge vs. Panel Terminology**: Codified in Section 1.3. `floor_cartridge` is reserved for interior horizontal assemblies that may carry finish options. `wall_panel` and `roof_panel` denote exterior products.
+- **Floor Level Manager**: New `floor_levels` array in assembly files. Each level declares `level_id`, `name`, `z_origin_ft`, `ceiling_height_ft`, and `is_foundation`. Replaces bare `story` integers for multi-story coordination. `story` integer is retained for backward compatibility.
+- **Stairwell Conceptual Object**: New `conceptual_objects` array in assembly files. Supports `type: "stairwell_volume"` with `level_range`, `nominal_dimensions`, and `behavior_rules` (`force_void_alignment`, `magnetic_snap_edges`).
+- **Sided Interface Roles**: New `interface_roles` array in product connectivity. Each role declares `cis_id`, `version`, `face` (geometric face of the product: `front`, `back`, `left`, `right`, `top`, `bottom`), and `side_addressed` (the named side from the referenced CIS standard). Enables surface-specific interface mapping without embedding engineering data.
+- **CIS Registry Reference**: Products reference external Configure-to-Order Interface Standard (`.cis`) files by `cis_id` and `version` via URL link rather than embedding engineering data. This keeps element files lightweight while maintaining traceability.
+- **Component Display ID**: New `component_display_id` field in placed elements. A human-readable unique ID per placed component (e.g., `FP-001` for floor panel 1, `KP-001` for kitchen pod 1) used to cross-reference BOM line items with tagged export drawings.
+- **3D Asset URL**: New `model_glb_url` field in product documentation block. Points to a GLB (Binary GLTF) file for Three.js rendering. Companion to the existing `model_3d_url` (GLTF) and `model_bim_url` (IFC) fields.
+- **GLB Coordinate System Standard**: GLB assets MUST be scaled to meters (1 unit = 1 meter, per glTF 2.0 standard), use Y-Up orientation, and register the South-West-Bottom (SWB) corner of the product at world origin `[0, 0, 0]`. Product depth grows along the negative Z-axis.
+
+### Changed
+
+- `catalog_reference` block expanded with new manufacturer and catalog fields (backward compatible — new fields are optional).
+- Insurance fields throughout `chain_of_custody` standardized to the new structured `insurer` block.
+- `story` integer field in `floor_cartridges` and `placed_elements` retained but supplemented by the new `level_id` string reference to the `floor_levels` array.
+
+### Fixed
+
+- Version labeling inconsistency: spec header now reads `0.1.5` to match internal `cto_version` field usage pattern.
+
+## [0.1] - 2026-04-05
+
+### Added
+- Initial draft specification
+- Contributing guidelines
+- Example files structure
+
+### Changed
+- (None yet)
+
+### Fixed
+- (None yet)
+
+---
+
 ## [0.1.4] - 2026-04-09
 
 ### Added
