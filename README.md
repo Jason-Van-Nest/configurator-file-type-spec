@@ -17,16 +17,20 @@ The CTO file format enables seamless interoperability between Configure-to-Order
 - **Nominal vs. Actual Dimensions**: Separates the grid footprint used by configurators from the physical shipping envelope, supporting chase-zone adjacency patterns
 - **Sided Interface Roles**: Products declare which geometric face addresses which side of a CIS (Configure-to-Order Interface Standard) — enabling surface-specific connection validation
 - **Multi-Story Support**: Floor level manager and stairwell conceptual objects for coordinated vertical stack configurations
+- **Entourage Elements**: Non-structural CAD block furniture layouts (bedrooms, dining rooms, seating areas) that render in 2D as architectural linework and in 3D as furniture models — aiding scale comprehension without contributing to pricing or scheduling
+- **Level Datum Architecture**: Levels as first-class abstract hosts independent of floor plates, with auto-deriving upper datums, conflict warnings, and a roof datum hosting the roof prism geometry
+- **Roof Prism**: Prismatic roof solid with two sloped faces rising to a ridge, hosting roof panels with pitch compatibility checking, eave overhangs, and gable ends handled by wall panels
+- **Stairwell Bounding Volume**: First-class hosting element for prefab staircases, interior furring wall cartridges, and shortened floor cartridges that dead-end against the stairwell perimeter
 
 ## Current Status
 
-- **Version**: 0.1.5 (Draft)
+- **Version**: 0.1.6 (Draft)
 - **Status**: In Active Development
-- **Last Updated**: April 12, 2026
+- **Last Updated**: April 17, 2026
 
 ## What's Included
 
-- **[CTO File Format Specification v0.1.5](spec/v0.1/specification.md)** — Complete schema definition, validation rules, and examples
+- **[CTO File Format Specification v0.1.6](spec/v0.1/specification.md)** — Complete schema definition, validation rules, and examples
 - **[Contributing Guidelines](CONTRIBUTING.md)** — How to propose changes and contribute
 - **[Change Log](spec/CHANGELOG.md)** — Version history and updates
 
@@ -86,8 +90,14 @@ Each party block carries name, address, website, contact, license number, and a 
 ### Interface Standards and CIS Files
 CfOC-published specifications (e.g., CfOC-ICC-1220, CfOC-ICC-1230) define connection geometry and performance requirements. In v0.1.5, products reference these standards via `interface_roles` — declaring which geometric face of the product addresses which named side of the standard (e.g., `dwelling_unit_side` vs. `building_services_side`). The engineering details live in external `.cis` files referenced by URL, keeping element files lightweight.
 
-### Floor Levels and Stairwell Objects
-Multi-story configurations use a `floor_levels` array to define abstract vertical planes (replacing bare `story` integers). `conceptual_objects` of type `stairwell_volume` span multiple levels and impose void-alignment constraints on adjacent floor cartridges.
+### Floor Levels, Level Datums, and Stairwell Volumes
+Multi-story configurations use a `floor_levels` array to define abstract vertical planes (replacing bare `story` integers). In v0.1.6, the new `level_datums` array elevates levels to first-class abstract hosts: each datum declares a `z_origin_ft` that can auto-derive from the level below (ceiling height + cartridge thickness), with user-overridable values and red conflict warnings. Roof datums reference the new roof prism geometry. The v0.1.5 `floor_levels` is retained for backward compatibility. Stairwell volumes (upgraded from v0.1.5 conceptual objects) are now first-class hosting elements for prefab staircases, interior furring wall cartridges, and shortened floor cartridges.
+
+### Entourage Elements
+Entourage elements are non-structural, non-priced visual elements placed in a configuration to aid scale comprehension. They render in 2D as detailed architectural-convention linework (referenced SVG files) and in 3D as furniture models (referenced GLB files). Each entourage is a pre-composed group of sub-elements (e.g., a "King Bedroom" contains a bed + 2 nightstands as one draggable unit). Entourage files use `cto_type: "entourage"` and are excluded from pricing, BOM, scheduling, and chain of custody.
+
+### Roof Prism
+The roof prism defines the three-dimensional roof geometry as a prismatic solid hosted to a roof-type level datum. The hypotenuse faces downward; two sloped faces rise to a ridge spanning the full building length. Roof panels are hosted to the sloped faces with pitch compatibility checking. Panels may extend beyond eave lines for overhangs. Gable end triangles are handled by wall panels, keeping the roof and wall systems independent.
 
 ### Legal Mateline
 The boundary at which a product transitions from goods (governed by UCC Article 2) to real property (governed by Common Law). This transition occurs at acceptance and is explicitly documented in the chain of custody.
@@ -167,6 +177,7 @@ See [LICENSE](LICENSE) for details.
 | Milestone | Status | Target Date |
 |-----------|--------|-------------|
 | v0.1.5 Release | ✅ Complete | April 2026 |
+| v0.1.6 Release (Entourage, Level Datums, Roof Prism, Stairwell Upgrade) | ✅ Complete | April 2026 |
 | Seed Library (LBS Urban Minimalist) | ✅ Complete | April 2026 |
 | Validation Suite | 🔄 In Progress | 2026 |
 | CIS File Type Specification | 🔄 In Progress | 2026 |
@@ -197,6 +208,6 @@ See [LICENSE](LICENSE) for details.
 
 ---
 
-**Last Updated:** April 12, 2026
+**Last Updated:** April 17, 2026
 
 For the latest updates, visit: https://github.com/Jason-Van-Nest/configurator-file-type-spec
