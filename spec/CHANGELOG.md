@@ -2,6 +2,25 @@
 
 All notable changes to the Configurator File Type Specification will be documented in this file.
 
+## [0.1.6] - 2026-04-17
+
+### Added
+
+- **Entourage Product Type**: New `cto_type: "entourage"` value and `entourage_elements` array. Entourage elements are non-structural, non-priced visual elements (furniture layouts, equipment placeholders) that render in 2D as architectural-convention linework (referenced SVG files) and in 3D as furniture models (referenced GLB files). Each entourage file is a `.cto` file defining a pre-composed group of sub-elements with relative offsets (e.g., a "King Bedroom" contains bed + 2 nightstands as one draggable unit). Entourage elements are hosted to level datums, must be fully within floor cartridge coverage, and are excluded from pricing, BOM, scheduling, fulfillment plan, and chain of custody.
+- **Stairwell Bounding Volume (First-Class)**: New `stairwell_volumes` top-level array, upgrading the v0.1.5 `conceptual_objects` stairwell from a planning hint to a first-class hosting element. Stairwell volumes host prefab staircase products (referenced by `product_id`), interior furring wall cartridges along perimeter edges, and shortened floor cartridges that dead-end against the volume. New `hosted_staircase`, `hosted_furring_walls`, and enhanced `behavior_rules` (including `allow_shortened_cartridges` and `min_cartridge_stub_ft`).
+- **Level Datum Architecture**: New `level_datums` top-level array establishing levels as first-class abstract hosts independent of floor plates. Each datum declares `z_origin_ft`, `ceiling_height_ft`, and hosting relationships. Ground datum is user-defined; upper datums auto-derive from `ceiling_height + cartridge_thickness` with user-overridable values and red conflict warnings. Roof datums reference the new roof prism. The v0.1.5 `floor_levels` array is retained for backward compatibility but superseded by `level_datums`.
+- **Roof Prism**: New `roof_prism` top-level object defining the three-dimensional roof geometry as a prismatic solid. The hypotenuse faces downward; two sloped faces rise to a ridge that spans the full building length. Each sloped face hosts roof panels with pitch compatibility checking. Roof panels may extend beyond eave lines for overhangs. Gable end triangles are handled by wall panels, not the roof system. Ridge cap product is optional.
+
+### Changed
+
+- Top-level structure expanded with `level_datums`, `entourage_elements`, `roof_prism`, and `stairwell_volumes` keys
+- `cto_type` enum expanded to include `"entourage"` alongside existing `"element"`, `"assembly"`, `"template"` values
+- `conceptual_objects` stairwell_volume (v0.1.5) deprecated in favor of the new `stairwell_volumes` first-class schema
+
+### Fixed
+
+- CHANGELOG ordering: removed duplicate `[0.1]` entry that duplicated `[0.1.0]`
+
 ## [0.1.5] - 2026-04-12
 
 ### Added
@@ -34,21 +53,6 @@ All notable changes to the Configurator File Type Specification will be document
 
 - Version labeling inconsistency: spec header now reads `0.1.5` to match internal `cto_version` field usage pattern.
 
-## [0.1] - 2026-04-05
-
-### Added
-- Initial draft specification
-- Contributing guidelines
-- Example files structure
-
-### Changed
-- (None yet)
-
-### Fixed
-- (None yet)
-
----
-
 ## [0.1.4] - 2026-04-09
 
 ### Added
@@ -63,8 +67,7 @@ All notable changes to the Configurator File Type Specification will be document
 ### Changed
 - `geometry` block in both `declares_interface` and Product Library Schema replaced with three-layer structure
 - Connection direction naming updated from cardinal (north/south/east/west) to relative (front/back/left/right) throughout product schema and fulfillment plan
-- Scattered party fields in `fulfillment_plan` (previously in `manufacturing_schedule.factory`, `delivery_manifest.shipments[].carrier`, `crane_lift_plan.crane`, `installation_schedule.general_contractor`, `crew_assignments[].provider`) consolidated into unified `parties` block
-- Section 5.2 renamed from Category Values to Geometry Layer Summary; Category Values moved to Section 5.4; Design Line Values moved to Section 5.5; Interface Standard Conformance moved to Section 5.6
+- Scattered party fields in `fulfillment_plan` consolidated into unified `parties` block
 
 ### Fixed
 - (None)
