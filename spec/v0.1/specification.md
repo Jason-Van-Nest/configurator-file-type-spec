@@ -1,12 +1,12 @@
 # CTO File Format Specification
 
-**Version:** 0.1.5
+**Version:** 0.1.6
 **Status:** Draft
 **Published by:** Center for Offsite Construction (CfOC) at NYIT
 **Specification URL:** https://centerforoffsiteconstruction.org/offsite-product-configurator-file-type/
 **GitHub Repository:** https://github.com/Jason-Van-Nest/configurator-file-type-spec
 **License:** Apache 2.0
-**Last Updated:** April 12, 2026
+**Last Updated:** April 17, 2026
 
 ---
 
@@ -14,7 +14,7 @@
 
 The CTO (Configure-to-Order) file format is an open standard for encoding building configurations composed from pre-designed, pre-engineered, and pre-certified offsite construction products. Unlike traditional CAD or BIM files that represent arbitrary geometry, a `.cto` file represents a **bounded design** — a composition of catalog products that has been validated against manufacturer constraints at the point of creation.
 
-This specification defines the JSON schema, validation rules, and interchange requirements for CTO files. Version 0.1.5 introduces nominal vs. actual dimensions, chase zones, installation orientation constraints, opening geometry for wall panels, sided interface roles with CIS registry references, a unified party schema for all chain-of-custody actors, structured insurer blocks, floor level management for multi-story configurations, and stairwell conceptual objects.
+This specification defines the JSON schema, validation rules, and interchange requirements for CTO files. Version 0.1.6 introduces three major extensions: (1) the Entourage product type for non-structural CAD block elements such as furniture layouts that aid scale comprehension without contributing to pricing or scheduling; (2) the Stairwell Bounding Volume, upgrading the v0.1.5 conceptual stairwell object to a first-class hosting element for prefab staircases, interior furring wall cartridges, and shortened floor cartridges; and (3) the Level Datum Architecture with Roof Prism, establishing levels as first-class abstract hosts independent of floor plates, with a geometric roof prism whose sloped faces host roof panels.
 
 ---
 
@@ -151,16 +151,19 @@ CTO files MAY be compressed using gzip. Compressed files SHOULD use the `.cto.gz
 
 A CTO file is a JSON object with the following top-level keys:
 
-```json
 {
-  "cto_version": "0.1.5",
+  "cto_version": "0.1.6",
   "project_meta": { },
   "catalog_reference": { },
   "structural_grid": { },
   "floor_levels": [ ],
+  "level_datums": [ ],
   "floor_cartridges": [ ],
   "placed_elements": [ ],
+  "entourage_elements": [ ],
+  "roof_prism": { },
   "roof_elements": [ ],
+  "stairwell_volumes": [ ],
   "conceptual_objects": [ ],
   "pricing_snapshot": { },
   "fulfillment_plan": { },
@@ -177,8 +180,24 @@ A CTO file is a JSON object with the following top-level keys:
 ```json
 "cto_version": "0.1.5"
 ```
-
 The version of the CTO specification this file conforms to. Parsers MUST reject files with a major version they do not support.
+
+### 4.1a `cto_type` (REQUIRED)
+
+```json
+"cto_type": "assembly"
+```
+
+Declares the intended role of this `.cto` file, analogous to part vs. assembly files in parametric CAD tools.
+
+| Value | Description |
+|-------|-------------|
+| `element` | A single product definition exposing its interfaces to parent assemblies. Element files include a `declares_interface` block (see Section 4.2a) |
+| `assembly` | A composition of multiple elements forming a complete or partial building configuration. This is the most common type for user-created projects |
+| `template` | A pre-validated assembly used as a starting point for user modification. Templates have `is_template: true` in `project_meta` |
+| `entourage` | A non-structural visual element (furniture layout, equipment placeholder) that renders in 2D/3D but does not contribute to pricing, scheduling, or chain of custody. Entourage files include an `entourage_meta` block (see Section 4.4c). New in v0.1.6 |
+
+Parsers MUST reject files with an unrecognized `cto_type` value.
 
 ### 4.2 `project_meta` (REQUIRED)
 
@@ -396,6 +415,372 @@ Conceptual objects are non-physical planning volumes that impose constraints on 
 | `position` | object | Yes | X/Y grid position of the SW corner of the volume |
 | `behavior_rules.force_void_alignment` | boolean | Yes | If true, floor cartridges at these coordinates must carry `opening_geometry` of type `void` |
 | `behavior_rules.magnetic_snap_edges` | boolean | Yes | If true, shorter floor cartridges snap to the stairwell perimeter edges |
+
+### 4.4c `entourage_elements` (OPTIONAL)
+
+Entourage elements are non-structural, non-priced visual elements placed in a configuration to aid scale comprehension and spatial planning. They render in both 2D (as architectural linework) and 3D (as furniture models) but do NOT contribute to the pricing snapshot, BOM, fulfillment plan, or delivery schedule. They are excluded from chain-of-custody tracking.
+
+Entourage elements are defined as `.cto` files with `cto_type: "entourage"`. Each entourage file describes a pre-composed group of sub-elements (e.g., a "King Bedroom" entourage contains a king bed, two nightstands, and a dresser positioned relative to each other).
+
+```json
+"entourage_elements": [
+  {
+    "instance_id": "ent-001",
+    "entourage_id": "king-bedroom-01",
+    "name": "King Bedroom Layout",
+    "entourage_source": {
+      "cto_file_url": "https://buildwithlogic.com/entourage/king-bedroom-01.cto",
+      "cto_version": "0.1.6",
+      "checksum": "sha256:abc123..."
+    },
+    "placement": {
+      "method": "grid_anchor",
+      "offset_ft": { "x": 8, "y": 4, "z": 0 }
+    },
+    "rotation_deg": 0,
+    "level_id": "L1",
+    "sub_elements": [
+      {
+        "sub_id": "bed",
+        "name": "King Bed",
+        "relative_offset_ft": { "x": 0, "y": 0, "z": 0 },
+        "dimensions_ft": { "width": 6.67, "length": 6.67, "height": 2.0 },
+        "svg_url": "https://buildwithlogic.com/entourage/svg/king-bed.svg",
+        "glb_url": "https://buildwithlogic.com/entourage/glb/king-bed.glb"
+      },
+      {
+        "sub_id": "nightstand-left",
+        "name": "Nightstand",
+        "relative_offset_ft": { "x": -1.75, "y": 0.5, "z": 0 },
+        "dimensions_ft": { "width": 1.5, "length": 1.5, "height": 2.0 },
+        "svg_url": "https://buildwithlogic.com/entourage/svg/nightstand-18.svg",
+        "glb_url": "https://buildwithlogic.com/entourage/glb/nightstand-18.glb"
+      },
+      {
+        "sub_id": "nightstand-right",
+        "name": "Nightstand",
+        "relative_offset_ft": { "x": 7.17, "y": 0.5, "z": 0 },
+        "dimensions_ft": { "width": 1.5, "length": 1.5, "height": 2.0 },
+        "svg_url": "https://buildwithlogic.com/entourage/svg/nightstand-18.svg",
+        "glb_url": "https://buildwithlogic.com/entourage/glb/nightstand-18.glb"
+      }
+    ]
+  }
+]
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `instance_id` | UUID string | Yes | Unique identifier for this placed entourage group |
+| `entourage_id` | string | Yes | Reference to the entourage definition (from `.cto` file or catalog) |
+| `name` | string | Yes | Human-readable name for display in palette and tooltips |
+| `entourage_source` | object | No | Reference to the `.cto` entourage file. If absent, the entourage definition is resolved from hardcoded data |
+| `placement` | object | Yes | Positioning of the group origin, using the same placement methods as `placed_elements` |
+| `rotation_deg` | number | Yes | Rotation of the entire group in degrees (0, 90, 180, 270) |
+| `level_id` | string | No | Reference to the `floor_levels` entry this entourage is hosted on |
+| `sub_elements` | array | Yes | The individual furniture pieces within this group, positioned relative to the group origin |
+
+#### Sub-Element Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `sub_id` | string | Yes | Unique identifier within this group |
+| `name` | string | Yes | Human-readable name |
+| `relative_offset_ft` | object | Yes | Position relative to the group origin `{ x, y, z }` |
+| `dimensions_ft` | object | Yes | Bounding box `{ width, length, height }` in feet |
+| `svg_url` | URL string | Yes | Reference to the SVG file for 2D architectural linework rendering |
+| `glb_url` | URL string | No | Reference to the GLB file for 3D furniture model rendering. If absent, a labeled bounding box is rendered |
+
+#### Entourage CTO File Schema
+
+When an entourage is defined as a `.cto` file, the file MUST include:
+
+```json
+{
+  "cto_version": "0.1.6",
+  "cto_type": "entourage",
+  "entourage_meta": {
+    "id": "king-bedroom-01",
+    "name": "King Bedroom Layout",
+    "category": "bedroom",
+    "description": "King bed centered between two 18-inch nightstands",
+    "overall_dimensions_ft": { "width": 10.17, "length": 7.17, "height": 2.0 },
+    "contributes_to_msrp": false,
+    "contributes_to_schedule": false,
+    "contributes_to_bom": false
+  },
+  "sub_elements": [ ]
+}
+```
+
+The `cto_type: "entourage"` value is new in v0.1.6. It joins the existing values `"element"`, `"assembly"`, and `"template"`.
+
+#### 2D Rendering Rules for Entourage
+
+Entourage elements render in 2D as thin solid medium-gray (`#9CA3AF`) linework using the referenced SVG files. The SVG files contain architectural-convention furniture symbols (bed outlines, table shapes, chair arcs). Entourage linework MUST be visually distinct from structural elements (walls, pods, cartridges) to prevent user confusion.
+
+#### 3D Rendering Rules for Entourage
+
+Entourage elements render in 3D using the referenced GLB files. If no GLB file is provided for a sub-element, a transparent bounding box with a text label is rendered. GLB files for entourage follow the same coordinate conventions as product GLB files (meters, Y-up, SWB origin).
+
+#### Validation Rules for Entourage
+
+- Entourage elements MUST be hosted to a `level_id` (they sit on a floor level datum)
+- The entire footprint of an entourage group MUST be within floor cartridge coverage (partial overlap is invalid)
+- Entourage elements do NOT participate in collision detection with structural elements (pods, walls, cartridges)
+- Entourage elements DO participate in collision detection with other entourage elements on the same level
+- Entourage elements MUST NOT appear in `pricing_snapshot.line_items`, `fulfillment_plan`, or `chain_of_custody`
+
+### 4.4d `stairwell_volumes` (OPTIONAL — replaces `conceptual_objects` stairwell_volume)
+
+In v0.1.6, the stairwell is upgraded from a conceptual planning volume to a first-class hosting element. A stairwell volume defines a vertical void through the floor plate that can host a prefab staircase product, interior furring wall cartridges along its perimeter, and shortened floor cartridges that dead-end against its edges.
+
+The `conceptual_objects` array with `type: "stairwell_volume"` (introduced in v0.1.5) is deprecated but remains valid for backward compatibility. Parsers encountering both `stairwell_volumes` and a `conceptual_objects` stairwell at the same position SHOULD prefer `stairwell_volumes`.
+
+```json
+"stairwell_volumes": [
+  {
+    "instance_id": "stair-001",
+    "component_display_id": "SW-001",
+    "name": "Main Stairwell",
+    "level_range": ["L1", "L2"],
+    "position": { "x": 16, "y": 0 },
+    "nominal_dimensions": {
+      "width_ft": 8.0,
+      "length_ft": 10.0,
+      "description": "The stairwell occupies a rectangular void in the floor plate. Width is measured along the X-axis, length along the Y-axis."
+    },
+    "rotation_deg": 0,
+    "hosted_staircase": {
+      "product_id": "stair-prefab-001",
+      "product_source": "https://buildwithlogic.com/products/stair-prefab-001.cto",
+      "description": "Optional. If a prefab staircase product is placed within this volume, it is referenced here. The staircase product is a catalog item with its own pricing, scheduling, and chain of custody."
+    },
+    "hosted_furring_walls": [
+      {
+        "instance_id": "fur-001",
+        "edge": "left",
+        "wall_thickness_ft": 0.375,
+        "description": "Interior furring wall cartridge along the left edge of the stairwell. Provides a finished surface against the stairwell void."
+      },
+      {
+        "instance_id": "fur-002",
+        "edge": "right",
+        "wall_thickness_ft": 0.375
+      },
+      {
+        "instance_id": "fur-003",
+        "edge": "back",
+        "wall_thickness_ft": 0.375
+      }
+    ],
+    "behavior_rules": {
+      "force_void_alignment": true,
+      "magnetic_snap_edges": true,
+      "allow_shortened_cartridges": true,
+      "min_cartridge_stub_ft": 2.0,
+      "description": "Floor cartridges adjacent to the stairwell may be shortened to dead-end against the stairwell perimeter. The minimum stub length prevents structural instability."
+    }
+  }
+]
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `instance_id` | UUID string | Yes | Unique identifier |
+| `component_display_id` | string | No | Human-readable ID for BOM/drawing cross-reference |
+| `name` | string | Yes | Human-readable name |
+| `level_range` | array of level_id strings | Yes | The floor levels this stairwell spans. Must reference entries in `floor_levels` |
+| `position` | object | Yes | X/Y grid position of the SW corner of the volume |
+| `nominal_dimensions` | object | Yes | Width and length footprint in feet |
+| `rotation_deg` | number | Yes | Rotation in degrees (0, 90, 180, 270) |
+| `hosted_staircase` | object | No | Reference to a prefab staircase product placed within the volume |
+| `hosted_furring_walls` | array | No | Interior furring wall cartridges along the stairwell perimeter edges |
+| `behavior_rules` | object | Yes | Constraint rules governing adjacent floor cartridge behavior |
+
+#### Hosted Furring Wall Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `instance_id` | string | Yes | Unique identifier for this furring wall instance |
+| `edge` | enum | Yes | Which edge of the stairwell: `front`, `back`, `left`, `right` |
+| `wall_thickness_ft` | decimal | Yes | Thickness of the furring wall cartridge |
+
+#### Behavior Rules
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `force_void_alignment` | boolean | Yes | If true, floor cartridges at these coordinates must carry `opening_geometry` of type `void` |
+| `magnetic_snap_edges` | boolean | Yes | If true, shorter floor cartridges snap to the stairwell perimeter edges |
+| `allow_shortened_cartridges` | boolean | Yes | If true, floor cartridges adjacent to the stairwell may be trimmed to dead-end against the volume |
+| `min_cartridge_stub_ft` | decimal | No | Minimum length of a shortened floor cartridge stub (prevents structural instability). Default: 2.0 ft |
+
+
+markdown### 4.4e Level Datum Architecture (v0.1.6)
+
+In v0.1.6, levels are elevated from an organizational convenience (`floor_levels`) to a first-class abstract hosting system. The `level_datums` array defines the vertical datum planes to which all elements are hosted. Levels are independent of floor plates — a level exists as an abstract plane whether or not floor cartridges have been placed on it.
+
+#### Hierarchy
+Level Datum
+└── hosts Floor Cartridges
+└── hosts Wall Panels (exterior, standing on this datum)
+└── hosts Pods (sitting on floor cartridges at this datum)
+└── hosts Entourage Elements
+└── hosts Interior Walls (non-panelized partitions)
+└── hosts Stairwell Volumes (spanning this datum to the next)
+
+#### Level Datum Schema
+
+```json
+"level_datums": [
+  {
+    "datum_id": "GF",
+    "name": "Ground Floor",
+    "type": "floor",
+    "z_origin_ft": 0.0,
+    "ceiling_height_ft": 9.0,
+    "is_ground": true,
+    "above_grade": true,
+    "auto_derived": false,
+    "notes": "Ground floor datum. Z-origin is the top of the foundation/slab."
+  },
+  {
+    "datum_id": "L2",
+    "name": "Second Floor",
+    "type": "floor",
+    "z_origin_ft": 9.833,
+    "ceiling_height_ft": 9.0,
+    "is_ground": false,
+    "above_grade": true,
+    "auto_derived": true,
+    "derived_from": {
+      "datum_below": "GF",
+      "formula": "GF.z_origin_ft + GF.ceiling_height_ft + cartridge_thickness_ft",
+      "cartridge_thickness_ft": 0.833,
+      "description": "Second level z_origin auto-derives from the ground floor ceiling height plus the floor cartridge structural thickness. User may override with a manual value; a red conflict warning appears if the override creates an impossible gap or overlap."
+    },
+    "notes": null
+  },
+  {
+    "datum_id": "RF",
+    "name": "Roof",
+    "type": "roof",
+    "z_origin_ft": 19.666,
+    "is_ground": false,
+    "above_grade": true,
+    "auto_derived": true,
+    "derived_from": {
+      "datum_below": "L2",
+      "formula": "L2.z_origin_ft + L2.ceiling_height_ft + cartridge_thickness_ft"
+    },
+    "roof_prism": "roof-prism-001",
+    "notes": "Roof datum hosts the roof prism geometry."
+  }
+]
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `datum_id` | string | Yes | Unique identifier for this datum (e.g., `GF`, `L2`, `RF`) |
+| `name` | string | Yes | Human-readable name |
+| `type` | enum | Yes | `floor` or `roof` |
+| `z_origin_ft` | decimal | Yes | Vertical offset from project origin in feet |
+| `ceiling_height_ft` | decimal | Conditional | Required for `type: "floor"`. Top-plate height for this level |
+| `is_ground` | boolean | Yes | True for the ground floor datum |
+| `above_grade` | boolean | Yes | True if this datum is above finished grade |
+| `auto_derived` | boolean | Yes | If true, `z_origin_ft` was calculated from the datum below |
+| `derived_from` | object | No | Derivation formula when `auto_derived: true` |
+| `roof_prism` | string | No | Reference to a `roof_prism` instance_id. Only valid for `type: "roof"` |
+
+#### Relationship to `floor_levels`
+
+The `floor_levels` array (introduced in v0.1.5) is retained for backward compatibility. When both `floor_levels` and `level_datums` are present, `level_datums` takes precedence. Parsers SHOULD migrate `floor_levels` entries to `level_datums` entries when writing v0.1.6 files. The key difference: `level_datums` supports auto-derivation, roof datums, and the hosting hierarchy.
+
+#### Conflict Warnings
+
+When a user manually overrides an auto-derived `z_origin_ft`, the configurator MUST check for geometric conflicts:
+
+- If the manual value creates a gap smaller than the floor cartridge thickness, a red warning is displayed
+- If the manual value creates an overlap (datum below ceiling + cartridge extends above this datum), a red warning is displayed
+- Conflicts are advisory (warnings, not errors) to allow intentional non-standard configurations
+
+### Roof Prism (v0.1.6)
+
+The roof prism defines the three-dimensional geometry of the roof as a prismatic solid hosted to a roof-type level datum. The prism is an inverted triangular extrusion: the hypotenuse face points downward (toward the building interior), and two sloped faces rise upward from the eaves to the ridge. Roof panels are hosted to the sloped faces.
+
+```json
+"roof_prism": {
+  "instance_id": "roof-prism-001",
+  "datum_id": "RF",
+  "name": "Main Roof",
+  "prism_geometry": {
+    "ridge_height_ft": 4.0,
+    "ridge_offset_x_ft": 24.0,
+    "building_width_ft": 48.0,
+    "building_length_ft": 20.0,
+    "eave_overhang_ft": 1.5,
+    "gable_overhang_ft": 0.0,
+    "description": "The prism spans the full building length. The ridge runs parallel to the building length axis at ridge_offset_x_ft from the left edge. Two sloped faces descend from the ridge to the eave lines. Ridge height is measured from the roof datum z_origin."
+  },
+  "slope_left": {
+    "rise_ft": 4.0,
+    "run_ft": 24.0,
+    "pitch": "2/12",
+    "hosted_panels": ["roof-001", "roof-002", "roof-003"],
+    "description": "Left slope descends from ridge to left eave. Panels hosted to this face must have compatible pitch."
+  },
+  "slope_right": {
+    "rise_ft": 4.0,
+    "run_ft": 24.0,
+    "pitch": "2/12",
+    "hosted_panels": ["roof-004", "roof-005", "roof-006"]
+  },
+  "ridge": {
+    "position_ft": { "x": 24.0, "z": 4.0 },
+    "length_ft": 20.0,
+    "cap_product_id": null,
+    "description": "Ridge line where the two sloped faces meet. Optional ridge cap product."
+  },
+  "gable_ends": {
+    "handling": "wall_panels",
+    "description": "Gable end triangles are handled by wall panels, not by the roof system. Wall panels at gable end positions are trimmed or custom-shaped to fill the triangular area above the top plate."
+  },
+  "eave_extensions": {
+    "panels_may_overhang": true,
+    "max_overhang_ft": 2.0,
+    "description": "Roof panels hosted to sloped faces may extend beyond the eave line to create overhangs. The overhang is measured horizontally from the exterior wall face."
+  }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `instance_id` | string | Yes | Unique identifier for this roof prism |
+| `datum_id` | string | Yes | Reference to the roof-type level datum |
+| `name` | string | Yes | Human-readable name |
+| `prism_geometry` | object | Yes | Overall prism dimensions |
+| `slope_left` | object | Yes | Left slope face definition with pitch and hosted panel references |
+| `slope_right` | object | Yes | Right slope face definition |
+| `ridge` | object | Yes | Ridge line geometry |
+| `gable_ends` | object | Yes | How gable end triangles are handled |
+| `eave_extensions` | object | No | Rules for panel overhang beyond the eave line |
+
+#### Roof Panel Hosting
+
+Roof panels referenced in `slope_left.hosted_panels` and `slope_right.hosted_panels` MUST:
+
+1. Be present in the `roof_elements` array
+2. Have `permitted_orientation: "sloped"` in their product constraints
+3. Have a declared `fixed_pitch` or `pitch_range` compatible with the slope's pitch
+4. Not extend beyond the ridge line or past the maximum overhang distance from the eave
+
+#### Relationship to `roof_elements`
+
+The `roof_elements` array (Section 4.7) continues to hold the individual roof panel instances. The roof prism provides the geometric context that determines where and at what angle those panels are placed. Think of the prism as the "datum surface" and the panels as the "hosted elements."
+
+#### Gable Ends
+
+Gable end triangles — the triangular wall area above the top plate at each end of the building — are NOT part of the roof prism geometry. They are handled by wall panels. This keeps the roof system and wall system independent: wall panels below the roof host to their own level datum, and gable end panels are simply wall panels shaped or positioned to fill the triangular area.
 
 ### 4.5 `floor_cartridges` (REQUIRED)
 
