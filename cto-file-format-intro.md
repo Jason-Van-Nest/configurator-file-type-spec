@@ -1,332 +1,110 @@
-# CTO File Format
+# Introducing the CTO File Format
 
-**A Legal and Technical Foundation for Configure-to-Order Construction**
-
-Version 0.1.0 | April 2026
-
-**Center for Offsite Construction**  
-School of Architecture & Design  
-New York Institute of Technology  
-[centerforoffsiteconstruction.org](https://centerforoffsiteconstruction.org)
+**A prose introduction to the Configure-to-Order file format ecosystem**
+*Updated for v0.2.0 — April 19, 2026*
 
 ---
 
-## Abstract
+## The short version
 
-The CTO (Configure-to-Order) file format is an open standard for encoding building configurations composed from pre-designed, pre-engineered, and pre-certified offsite construction products. Unlike traditional CAD or BIM files that represent arbitrary geometry, a `.cto` file represents a bounded design — a composition of catalog products that has been validated against manufacturer constraints at the point of creation.
+The CTO file format is an open standard for representing buildings as **compositions of pre-validated catalog products**, rather than as arbitrary geometry the way CAD or BIM files do. A `.cto` file describes a complete or partial building by referencing products that have already been engineered, certified, and priced — and by declaring how those products connect.
 
-This whitepaper presents the rationale, structure, and adoption pathway for the CTO file format. It explains how the format supports the transition from Engineer-to-Order (ETO) to Configure-to-Order (CTO) delivery, documents the legal transition from goods to real property, and provides the foundation for a national marketplace of interoperable building products.
+As of v0.2.0, the CTO format has a companion: the **CIS file format**, which separately documents the connection interface standards that products conform to. Together, the two file formats let manufacturers, software vendors, and AHJs work with a shared, machine-readable language for offsite construction.
 
-Version 0.1.0 introduces comprehensive product performance attributes, interface standard conformance tracking, and a complete chain-of-custody framework that documents the legal transition from goods (governed by UCC Article 2) to real property (governed by Common Law).
-
----
-
-## Table of Contents
-
-1. [Introduction](#1-introduction)
-2. [The Problem: Why Existing Formats Fall Short](#2-the-problem-why-existing-formats-fall-short)
-3. [The Solution: A Configure-to-Order File Format](#3-the-solution-a-configure-to-order-file-format)
-4. [File Structure Overview](#4-file-structure-overview)
-5. [Product Schema](#5-product-schema)
-6. [Chain of Custody and Legal Mateline](#6-chain-of-custody-and-legal-mateline)
-7. [Interface Standard Conformance](#7-interface-standard-conformance)
-8. [Validation and Constraints](#8-validation-and-constraints)
-9. [Use Cases](#9-use-cases)
-10. [Path to Adoption](#10-path-to-adoption)
-11. [Conclusion](#11-conclusion)
+If you've used the IKEA kitchen planner, the conceptual model is similar: you don't draw arbitrary cabinets, you place catalog cabinets. The CTO format takes that idea and applies it to whole buildings — pods, panels, cartridges, couplers — with the rigor needed for real-world construction (structural validation, code compliance, chain of custody, legal status tracking from manufacturing to acceptance).
 
 ---
 
-## 1. Introduction
+## The two file formats
 
-The architecture, engineering, and construction (AEC) industry is undergoing a fundamental transformation. After a century of Engineer-to-Order (ETO) delivery — where every building is designed from scratch through bespoke professional services — the industry is moving toward Configure-to-Order (CTO) production, where buildings are assembled from pre-designed, pre-certified, interoperable products.
+### `.cto` files describe **what gets built**
 
-This transformation mirrors what happened in automotive, aerospace, and electronics manufacturing decades ago. In those industries, the shift from craft production to platform-based manufacturing unlocked exponential productivity gains, predictable quality, and scalable supply chains. Construction is the last major industry to make this transition.
+A `.cto` file has one of four `cto_type` values:
 
-The CTO file format is the digital foundation for this transformation. It provides a standard way to represent, validate, price, and track building configurations composed from catalog products. It embodies the core principle of Configure-to-Order: **design as purchasing, not drafting.**
+- **`assembly`** — a complete or partial building configuration. This is what a designer creates when they sit down at a configurator and arrange products to form a building. An assembly file references product IDs from a manufacturer's catalog and describes how the products are placed and connected.
+- **`element`** — a single product definition. This is what a manufacturer authors when they want to publish a product (a kitchen pod, a wall panel) in a way that other tools can validate and reference.
+- **`template`** — a pre-validated assembly used as a starting point. Think of templates like "starter floor plans" — they're real assemblies that designers can open and modify.
+- **`entourage`** — non-structural visual elements like furniture layouts. Entourage files render in the configurator for scale and context but don't contribute to pricing, scheduling, or chain of custody.
 
-### 1.1 Purpose of This Document
+### `.cis` files describe **how products connect**
 
-This whitepaper serves three audiences:
+A `.cis` file documents one connection interface standard. Connection standards specify what happens at the plane between two products — port positions, gendering, utility requirements (pipe sizes, electrical specs), structural handshakes (bolts, alignment pins), and version compatibility.
 
-- **Software developers** building configurators, manufacturing execution systems, or supply chain platforms who need to understand the CTO schema
-- **Manufacturers** producing offsite construction products who want their catalogs to be CTO-compatible
-- **Legal and policy professionals** examining how commercial law (UCC) and property law (Common Law) intersect in offsite construction
+Two examples make this concrete:
 
----
+**`CfOC-ICC-1220`** is an open standard governing the core-utility handshake between any volumetric module and the building services it plugs into. It specifies a 6"×92.5" connection envelope with cold water at one position, sanitary drain at another, primary electrical at a third, and so on. Any manufacturer can adopt CfOC-ICC-1220 in their products; the standard belongs to the industry.
 
-## 2. The Problem: Why Existing Formats Fall Short
+**`LBS-INT-UTIL-KIT`** is a proprietary catalog-internal standard owned by Logic Building Systems. It governs how Logic kitchen pods connect to Logic utility pods. Other manufacturers' products can't use this standard, but Logic's own catalog uses it consistently.
 
-The AEC industry has developed sophisticated digital standards for representing buildings: DWG, RVT, IFC, gbXML, and others. These formats serve their purposes well, but they were designed for an Engineer-to-Order world. They assume that every building is a one-off design, that geometry is authored by professionals, and that the file represents an intent rather than a validated configuration.
-
-### 2.1 Limitations of Traditional Formats
-
-| Aspect | Traditional Formats | CTO Format |
-|---|---|---|
-| Content | Arbitrary geometry | Catalog product references |
-| Validation | Requires human interpretation | Machine-validatable |
-| Pricing | Not represented | MSRP embedded |
-| Supply Chain | Not integrated | Manufacturing & delivery tracking |
-| Legal Status | Ambiguous | Documents goods-to-property transition |
-
-Traditional formats assume that design will be engineered, priced, and scheduled through separate downstream processes. The CTO format assumes that these concerns are resolved at the point of product design, not project design.
-
-### 2.2 The Legal Gap
-
-Perhaps most critically, existing file formats are silent on the legal status of the components they represent. A bathroom pod in a BIM model has geometry, materials, and cost estimates — but nothing indicates whether it is currently a good (governed by UCC Article 2), a fixture, or real property (governed by state property law).
-
-This ambiguity matters because offsite products move through multiple legal regimes before becoming part of a building. They are manufactured as goods, shipped under commercial law, delivered to a jobsite, installed as fixtures, and ultimately become real property. At each transition, questions arise: Who owns the product? Who bears the risk of loss? Which insurance policy responds? When do warranties activate?
-
-The CfOC whitepaper *From Handshake to Hardware* documents these legal challenges in detail. The CTO file format is designed to address them.
+Both kinds of standards — open and proprietary — use the same `.cis` file format. The `registry_scope` field distinguishes them.
 
 ---
 
-## 3. The Solution: A Configure-to-Order File Format
+## The relationship between CTO and CIS
 
-The CTO file format is a JSON-based standard that represents building configurations as compositions of catalog products. It is designed to be:
+The architectural design is straightforward: **products declare which standards they conform to; standards specify what those declarations mean.**
 
-- **Catalog-constrained:** Every element references a `product_id` from a known catalog. Invalid configurations cannot be saved.
-- **Machine-validatable:** Constraint satisfaction, interface compatibility, and structural/thermal performance can be verified without human interpretation.
-- **Price-transparent:** Every product carries an MSRP. Options add predictably. The total price is always deterministic.
-- **Supply-chain-integrated:** The fulfillment plan section tracks manufacturing, delivery, crane lifts, and installation.
-- **Legally explicit:** The chain of custody documents ownership, risk, insurance, and legal status at each stage.
+A kitchen pod's `.cto` element file declares: *"My back face addresses the dwelling-unit side of CfOC-ICC-1220, and my left or right face addresses the kitchen-pod side of LBS-INT-UTIL-KIT."* That's two interfaces, expressed compactly in the element file's `declares_interface` block.
 
-### 3.1 Design as Purchasing
+The element file does NOT include the port positions, pipe specs, or bolt diameters of either interface. Those live in the referenced `.cis` files. The element file just says *which* standards apply and *which face of the product addresses which side of each standard*.
 
-The fundamental shift from ETO to CTO is captured in a simple phrase: **design as purchasing, not drafting.**
+This separation has three benefits:
 
-In an ETO workflow, design is an act of invention. Professionals draw custom geometry, specify custom assemblies, and engineer custom solutions. The result is a set of documents (drawings, specifications, schedules) that must be interpreted by downstream parties.
-
-In a CTO workflow, design is an act of selection. Customers configure their homes from a catalog of pre-designed products. The result is a validated configuration that can flow directly into manufacturing execution.
-
-The CTO file format embodies this shift. It does not represent arbitrary geometry; it represents selections from a bounded design space.
+1. **Standards bodies can publish and version independently of product catalogs.** When CfOC publishes a new version of `CfOC-ICC-1220`, manufacturers don't have to re-author their product files — they just bump the version reference.
+2. **Element files stay compact and focused.** A kitchen pod file is about 200-300 lines describing the kitchen pod, not 1000+ lines re-documenting the connection standard.
+3. **Multiple standards on one product is natural.** A bath pod that uses CfOC-ICC-1220 on its top face and LBS-INT-BATH-UTIL on its bottom face just declares two interfaces. No special schema accommodation needed.
 
 ---
 
-## 4. File Structure Overview
+## A small but important constraint: the rotation lock
 
-A CTO file is UTF-8 encoded JSON with the following top-level structure:
+One concept in the CTO spec deserves explicit explanation because it's easy to miss and important to get right: the **rotation-lock validation rule** in the `interface_roles` block.
 
-| Section | Purpose |
-|---|---|
-| `cto_version` | Specification version for compatibility checking |
-| `project_meta` | Project identity, author, climate zone, jurisdiction |
-| `catalog_reference` | Manufacturer, catalog version, interface standards used |
-| `structural_grid` | Coordinate system derived from floor cartridge placement |
-| `floor_cartridges` | Structural floor assemblies defining the grid |
-| `placed_elements` | Pods, panels, and other products with connections |
-| `roof_elements` | Roof assemblies |
-| `pricing_snapshot` | Line items, subtotals, and total MSRP |
-| `fulfillment_plan` | Manufacturing, delivery, crane lift, installation schedules |
-| `validation_state` | Errors, warnings, interface compatibility status |
+When a product declares `interface_roles`, it's not just providing informational metadata. It's saying: *"Only this specific face of mine is permitted to mate with this CIS plane. If you (the configurator) try to rotate me so a different face is at the connection plane, you've broken the rule."*
 
-Each section serves a distinct purpose in the CTO workflow. The design-time sections (`project_meta` through `roof_elements`) represent the configuration itself. The commerce sections (`pricing_snapshot` and `fulfillment_plan`) represent the business and logistics aspects. The `validation_state` section provides machine-readable quality assurance.
+Why does this matter? Because a CIS file knows what the connection plane looks like, but it doesn't and can't know which face of any specific product is the face that addresses it. A bath pod has six faces; only one of them carries the 1" PEX male coupling that a CfOC-ICC-1220 plane expects. If a configurator blindly rotated the pod 90°, it would try to connect the side face to the building services — and there's no PEX coupling on that side face. Manufacturing impossibility.
 
-Note: The file structure below reflects v0.1.0. See the full specification for the current schema including fields added in v0.1.2.
+The `interface_roles` block prevents this. It's the binding between *product geometry* (which face is which) and *interface standards* (what connections happen where). Both are needed. Neither alone is sufficient.
+
+A subtle but important policy choice: rotation violations produce **warnings, not errors**. At design time, users explore — they may want to rotate a product to see what it would look like, even if the rotation breaks an interface. The warning informs them. Manufacturing-ready export requires resolving all warnings; design-time exploration permits them.
 
 ---
 
-## 5. Product Schema
+## What's new in v0.2.0
 
-Products in CTO-compatible catalogs carry comprehensive metadata organized into several domains:
+The CTO spec graduated from v0.1.6 to v0.2.0 in coordination with the first publication of the CIS spec (v0.1.3). The major changes:
 
-### 5.1 Identity & Catalog Lineage
+- **Companion specification introduced.** The CIS file format is published as a sibling to CTO in the same repository. CTO spec §1.6 explains the relationship.
+- **`declares_interface` block formalized.** Previously a forward-pointer ambiguity in the CTO spec, this block is now a fully-specified top-level array. See CTO §4.2a.
+- **`element_meta` block added.** Element files (`cto_type: "element"`) get their own metadata block, distinct from the `project_meta` block used by user assemblies. See CTO §4.2.
+- **`interface_roles` reframed as a rotation-lock validation rule.** The block was always meant to enforce rotation constraints; the v0.2.0 prose makes this explicit, with a worked bath-pod example. See CTO §5.7.
+- **Eight in-scope clarifications.** Bounding box coordinates, face label semantics, clearance zone scope, and several other ambiguities surfaced during real catalog authoring are now resolved in prose. See CTO Appendix D.
+- **A new design principle: specifications speak to humans.** Schema definitions alone serve only software developers. The spec now states explicitly that prose is required for two other audiences (standards engineers and decision-makers), with extra prose preferred to less. See CTO §2.8.
 
-Each product has a unique `product_id`, `manufacturer_id`, `catalog_version`, and `product_version`. The `design_line` attribute (e.g., Urban Minimalist, Rustic Retreat, Coastal Breeze) groups products into aesthetic families.
-
-### 5.2 Geometry
-
-Dimensions, weight, center of gravity, bounding box, and clearance zones enable collision detection, structural analysis, and rigging planning.
-
-### 5.3 Connectivity
-
-Connection points declare position, direction, interface standard conformance, and gender. MEP connections specify electrical capacity, plumbing sizes, and HVAC requirements. This enables the configurator to validate that connected products are compatible.
-
-### 5.4 Performance
-
-Structural performance attributes include load capacity, transmitted loads, seismic design category compatibility, and foundation requirements. Thermal performance attributes include R-values, U-factors, air leakage rates, and climate zone compatibility. These enable code compliance validation.
-
-### 5.5 Certifications
-
-Products carry arrays of certifications (ICC-ES, UL, ETL), code compliance declarations (IBC, IRC, IECC, NFPA), fire ratings, accessibility compliance, and state modular program approvals. These attestations travel with the product.
-
-### 5.6 Installation & Warranty
-
-Rigging requirements, installation manuals, commissioning checklists, and warranty terms are embedded in the product schema. This information flows into the fulfillment plan when the product is ordered.
+The CIS spec is at v0.1.3, having gone through three iterations during a single intensive authoring session that surfaced 22 spec observations. Approximately one-third of those observations are addressed in the v0.2.0 / v0.1.3 paired release; the rest are tracked for future versions.
 
 ---
 
-## 6. Chain of Custody and Legal Mateline
+## Where to go next
 
-The chain of custody system is the CTO format's response to the legal challenges documented in *From Handshake to Hardware*. It tracks each product instance from factory release to acceptance, documenting the legal transition from goods to real property.
+**Read the specs:** [CTO v0.2.0](spec/cto/v0.2/specification.md) | [CIS v0.1.3](spec/cis/v0.1/specification.md)
 
-### 6.1 The Legal Mateline
+**See an example:** [CfOC-ICC-1220 v0.2.0 CIS file](examples/cis/CfOC-ICC-1220-v0.2.0.cis) — a fully-conformant CIS file documenting the core-utility handshake between modules and building services
 
-The **legal mateline** is the boundary at which a product transitions from goods (governed by UCC Article 2) to real property (governed by Common Law). The CTO format explicitly documents this transition through the chain of custody.
+**Track the version history:** [CHANGELOG.md](spec/CHANGELOG.md)
 
-| Stage | Legal Status | Description |
-|---|---|---|
-| Factory Release | Goods | Product cleared from manufacturing floor |
-| Transport | Goods | Moving between facilities |
-| Delivery | Goods | Arrived at jobsite or staging yard |
-| Staging | Goods | Awaiting installation |
-| Placement | Goods → Fixture | Set on foundation/structure |
-| Connection | Fixture | Attached to adjacent elements |
-| Commissioning | Fixture | Systems tested and verified |
-| **Acceptance** | **Real Property** | **Mateline crossing; warranties activate** |
-
-### 6.2 What the Chain Documents
-
-At each custody stage, the CTO file records:
-
-- **Timestamp:** When the stage occurred
-- **Responsible party:** Who took custody
-- **Witness:** Who verified the handoff
-- **Condition:** Status, notes, photos
-- **Risk owner:** Who bears the risk of loss
-- **Title holder:** Who owns the asset
-- **Insurance policy:** Which policy responds
-- **Legal status:** Goods, fixture, or real property
-
-This documentation provides evidentiary support for disputes, warranty claims, and insurance inquiries.
+**Contribute:** Issues and pull requests are welcome at the [GitHub repo](https://github.com/Jason-Van-Nest/configurator-file-type-spec). Please draft prose-first and JSON-second, per the v0.2.0 design principle.
 
 ---
 
-## 7. Interface Standard Conformance
+## A note on the project context
 
-Products in a CTO ecosystem must be interoperable. This requires shared interface standards that define how products connect physically, structurally, and thermally.
+The CTO/CIS file format ecosystem is a project of the [Center for Offsite Construction (CfOC)](https://centerforoffsiteconstruction.org) at NYIT's School of Architecture and Design. CfOC's broader research thesis is that the U.S. construction industry should transition from Engineer-to-Order (ETO) workflows — where every building is designed from scratch and engineered by hand — to Configure-to-Order (CTO) workflows, where buildings are composed from validated catalogs of pre-engineered products.
 
-### 7.1 CfOC Interface Standards
+The CTO and CIS file formats are the **digital infrastructure** for that transition. They make it possible to express buildings in machine-readable terms that catalogs, configurators, manufacturers, and AHJs can all work with. They are not, by themselves, a complete CTO ecosystem — the catalogs and configurators that *use* these file formats are separate work — but they are the language those tools must share.
 
-The Center for Offsite Construction, as an ANSI-accredited standards developer, is developing interface standards for offsite construction:
-
-- **CfOC-ICC-1220:** Module-to-module connectivity
-- **CfOC-ICC-1230:** Panel-to-panel connectivity
-
-Products declare which interface standards they conform to at each connection point. The configurator validates that connected products share at least one compatible interface version.
-
-### 7.2 Validation Rules
-
-A connection is valid if and only if:
-
-1. Both products declare the same `interface_standard`
-2. The `interface_versions` arrays have at least one version in common
-3. The `gender` values are complementary (`male`/`female`) or both `neutral`
-4. The `connection_type` values match
+This work is published under Apache 2.0 because the file format ecosystem only delivers value if anyone can adopt it. We invite manufacturers, software vendors, and standards bodies to use, extend, and improve these specifications.
 
 ---
 
-## 8. Validation and Constraints
-
-The CTO format is designed to be machine-validatable. A conforming parser enforces multiple categories of validation rules:
-
-**Referential Integrity**  
-Every `product_id` must exist in the referenced catalog. Every connection must reference a valid `instance_id`.
-
-**Grid Consistency**  
-Grid lines must be monotonically increasing. Floor cartridges must tile completely without gaps.
-
-**Constraint Satisfaction**  
-Products may only connect at declared connection points. Placement constraints (`min_adjacent_width`, `max_stack_height`) must be satisfied.
-
-**Interface Compatibility**  
-Connected products must share compatible interface standards and versions.
-
-**Structural Performance**  
-Transmitted loads at each connection must not exceed the receiving element's capacity.
-
-**Thermal Performance**  
-All exterior elements must be compatible with the project's climate zone.
-
-**Chain of Custody Consistency**  
-Dates must be internally consistent. Legal status must progress correctly from goods to fixture to real property.
-
----
-
-## 9. Use Cases
-
-### 9.1 Building Configurators
-
-The primary use case is the CTO building configurator: a web-based tool where customers configure homes from a kit of pre-certified parts. The IKEA kitchen planner is the UX precedent. The configurator validates constraints in real time, displays pricing, and generates a `.cto` file that can flow into manufacturing.
-
-### 9.2 Manufacturing Execution
-
-CTO files can be ingested by factory MES systems to schedule production, allocate materials, assign serial numbers, and track work-in-process. The `production_slots` array in the fulfillment plan integrates directly with factory scheduling.
-
-### 9.3 Supply Chain Coordination
-
-The fulfillment plan coordinates multiple parties: factory, third-party inspectors, carriers, crane operators, installers, and AHJs. Each party can read the sections relevant to their role while respecting the chain of custody.
-
-### 9.4 Legal Documentation
-
-The chain of custody section provides evidentiary support for disputes, warranty claims, and insurance inquiries. It answers the key questions: Who owned the product? Who bore the risk? Which policy responded?
-
-### 9.5 Multi-Manufacturer Marketplaces
-
-As interface standards mature, CTO files will enable configurations that mix products from multiple manufacturers — all validated for compatibility through shared interface standard conformance.
-
----
-
-## 10. Path to Adoption
-
-The CTO file format is being developed through CfOC's ANSI-accredited consensus process. Adoption will proceed through several phases:
-
-### 10.1 Reference Implementation
-
-Logic Building Systems is developing a reference implementation: a web-based configurator that generates v0.1.0-compliant CTO files for single-family residential configurations.
-
-### 10.2 Validation Tools
-
-CfOC will publish open-source validation tools (JSON Schema, reference validator, test fixtures) to help developers verify conformance.
-
-### 10.3 Manufacturer Onboarding
-
-CfOC will work with pod, panel, and module manufacturers to develop CTO-compatible product catalogs. The goal is to demonstrate interoperability across multiple suppliers.
-
-### 10.4 IANA Registration
-
-CfOC will register the MIME type (`application/vnd.cfoc.cto+json`) with IANA to formalize the file format in internet standards.
-
-### 10.5 Integration Partners
-
-CfOC will partner with MES vendors, ERP systems, and project delivery platforms to demonstrate end-to-end workflows from configuration to acceptance.
-
----
-
-## 11. Conclusion
-
-The CTO file format represents a new foundation for the built environment — one designed for Configure-to-Order rather than Engineer-to-Order delivery.
-
-By encoding configurations as compositions of catalog products, the CTO format enables machine validation, real-time pricing, supply chain integration, and legal traceability. By documenting the chain of custody from factory to acceptance, it bridges the gap between commercial law (UCC) and property law (Common Law) that has long created ambiguity in offsite construction.
-
-Version 0.1.0 introduces the interface standard conformance framework that will enable multi-manufacturer interoperability, and the chain of custody system that documents the legal mateline crossing from goods to real property.
-
-The CfOC invites software developers, manufacturers, and legal professionals to engage with this draft specification. Together, we can build the digital infrastructure for a Configure-to-Order building economy.
-
----
-
-## Document Information
-
-**Specification Version:** 0.1.0  
-**Whitepaper Date:** April 5, 2026  
-**Comment Period:** Open through June 30, 2026  
-**License:** MIT
-
-### Editors
-
-Jason Van Nest, Center for Offsite Construction  
-Mathew Ford, Center for Offsite Construction
-
-### Contributors
-
-Michael Nolan, CfOC BIM/VDC Research Fellow  
-Steve DeWitt, CfOC Senior Research Fellow  
-Sam Williams, CfOC Senior Research Fellow
-
-### Contact
-
-Center for Offsite Construction  
-School of Architecture & Design  
-New York Institute of Technology  
-1855 Broadway, New York, NY 10023  
-mford@centerforoffsiteconstruction.org
+*For the full repository structure, version history, and contribution guidelines, see [README.md](README.md).*

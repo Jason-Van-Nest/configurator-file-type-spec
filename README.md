@@ -1,198 +1,141 @@
 # Configurator File Type Specification
 
-A comprehensive, open-source specification for the **CTO (Configure-to-Order) File Format** — the standard for encoding building configurations composed from pre-designed, pre-engineered, and pre-certified offsite construction products.
+This repository hosts the open specifications for two related file formats used in Configure-to-Order (CTO) building configurators:
 
-## Overview
+- **The CTO File Format Specification** (`.cto` files) — building configurations and product definitions
+- **The CIS File Format Specification** (`.cis` files) — connection interface standards
 
-The CTO file format enables seamless interoperability between Configure-to-Order building configurators, manufacturing execution systems, and project delivery platforms. Unlike traditional CAD or BIM files that represent arbitrary geometry, a `.cto` file represents a **bounded design** — a composition of catalog products that has been validated against manufacturer constraints at the point of creation.
+Both specifications are released under the Apache 2.0 license and developed by the [Center for Offsite Construction (CfOC) at NYIT](https://centerforoffsiteconstruction.org).
 
-### Key Features
+---
 
-- **Catalog-Constrained Design**: Every element references a product in a known catalog
-- **Pre-Validated Connections**: All connections are validated against interface standards before saving
-- **Complete Chain of Custody**: Tracks products from factory release through acceptance, documenting the legal transition from goods to real property across six defined party roles: manufacturer, logistics company, GC accepting shipping, hoisting company, pod installer, and panel installer
-- **Price Transparency**: Deterministic pricing based on product composition
-- **Self-Describing**: Contains all metadata necessary for rendering, validation, and pricing without external dependencies
-- **End-to-End Traceability**: Encodes manufacturing schedules, delivery logistics, and installation sequencing
-- **Nominal vs. Actual Dimensions**: Separates the grid footprint used by configurators from the physical shipping envelope, supporting chase-zone adjacency patterns
-- **Sided Interface Roles**: Products declare which geometric face addresses which side of a CIS (Configure-to-Order Interface Standard) — enabling surface-specific connection validation
-- **Multi-Story Support**: Floor level manager and stairwell conceptual objects for coordinated vertical stack configurations
-- **Entourage Elements**: Non-structural CAD block furniture layouts (bedrooms, dining rooms, seating areas) that render in 2D as architectural linework and in 3D as furniture models — aiding scale comprehension without contributing to pricing or scheduling
-- **Level Datum Architecture**: Levels as first-class abstract hosts independent of floor plates, with auto-deriving upper datums, conflict warnings, and a roof datum hosting the roof prism geometry
-- **Roof Prism**: Prismatic roof solid with two sloped faces rising to a ridge, hosting roof panels with pitch compatibility checking, eave overhangs, and gable ends handled by wall panels
-- **Stairwell Bounding Volume**: First-class hosting element for prefab staircases, interior furring wall cartridges, and shortened floor cartridges that dead-end against the stairwell perimeter
+## Current versions
 
-## Current Status
+| Specification | Current Version | Location |
+|---|---|---|
+| CTO File Format | **v0.2.0** | [`spec/cto/v0.2/specification.md`](spec/cto/v0.2/specification.md) |
+| CIS File Format | **v0.1.3** | [`spec/cis/v0.1/specification.md`](spec/cis/v0.1/specification.md) |
 
-- **Version**: 0.1.6 (Draft)
-- **Status**: In Active Development
-- **Last Updated**: April 17, 2026
+Released: April 19, 2026. See [CHANGELOG.md](spec/CHANGELOG.md) for version history.
 
-## What's Included
+---
 
-- **[CTO File Format Specification v0.1.6](spec/v0.1/specification.md)** — Complete schema definition, validation rules, and examples
-- **[Contributing Guidelines](CONTRIBUTING.md)** — How to propose changes and contribute
-- **[Change Log](spec/CHANGELOG.md)** — Version history and updates
+## What these specifications do
 
-## Quick Links
+### The CTO file format (`.cto`)
 
-| Resource | Link |
-|----------|------|
-| Full Specification | [spec/v0.1/specification.md](spec/v0.1/specification.md) |
-| Contributing Guide | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Change Log | [spec/CHANGELOG.md](spec/CHANGELOG.md) |
-| GitHub Repository | https://github.com/Jason-Van-Nest/configurator-file-type-spec |
+The CTO file format is an open standard for encoding building configurations composed from pre-designed, pre-engineered, and pre-certified offsite construction products. Unlike traditional CAD or BIM files that represent arbitrary geometry, a `.cto` file represents a **bounded design** — a composition of catalog products that has been validated against manufacturer constraints at the point of creation.
 
-## Getting Started
+A `.cto` file:
 
-### For Specification Readers
-1. Start with the [Introduction](spec/v0.1/specification.md#1-introduction) and review the Terminology table — several key terms (Floor Cartridge, Wall Panel, Nominal Dimensions, Chase Zone, Sided Interface) are defined there
-2. Review the [Design Principles](spec/v0.1/specification.md#2-design-principles)
-3. Explore the [Schema Definition](spec/v0.1/specification.md#4-schema-definition)
+- References products from a known catalog rather than defining arbitrary geometry
+- Encodes spatial relationships, connection topology, and interface standard conformance
+- Carries pricing, scheduling, and constraint metadata
+- Tracks the complete chain of custody from fabrication to acceptance
+- Documents the legal transition from goods (UCC) to real property (Common Law)
+- Can be validated without human review
 
-### For Implementers
-1. Review the complete [Schema Definition](spec/v0.1/specification.md#4-schema-definition) and [Product Library Schema](spec/v0.1/specification.md#5-product-library-schema)
-2. Note the [Unified Party Schema](spec/v0.1/specification.md#43a-unified-party-schema-reference-definition) (Section 4.3a) — all chain-of-custody actor blocks share this structure
-3. Implement [Validation Rules](spec/v0.1/specification.md#7-validation-rules)
-4. Test against the [Validation Suite](https://github.com/cfoc/cto-validator) (external)
+Four `.cto` file subtypes are defined: `assembly` (a complete or partial building configuration), `element` (a single product definition such as a kitchen pod), `template` (a pre-validated assembly used as a starting point), and `entourage` (non-structural visual elements like furniture layouts).
 
-### For Contributors
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose changes, report issues, and submit improvements.
+### The CIS file format (`.cis`)
 
-## Key Concepts
+The CIS file format is the companion specification to CTO. CIS files document **connection interface standards** as machine-readable artifacts — including connection plane sides, port geometry, port connection signatures, utility requirements, and structural handshakes.
 
-### Configure-to-Order (CTO)
-A design approach where buildings are composed from catalog products rather than the arbitrary geometry of Engineer-to-Order methods. A CTO configurator constrains design to what is pre-designed, pre-certified, manufacturable, and available. The governing principle: **design as purchasing, not drafting**.
+A `.cis` file:
 
-### Catalog-Constrained Design
-Every element in a CTO file must reference a `product_id` that exists in a known catalog. The catalog — not the designer — defines what is possible.
+- Defines the two sides of a connection plane (e.g., `dwelling_unit_side` / `building_services_side`)
+- Specifies port positions, tolerances, and connection signatures within each side
+- Describes utility requirements (pipe specs, ASTM standards, pressure ranges) at each port
+- Documents structural handshakes (bolts, alignment pins, load transfer)
+- Distinguishes open standards (publicly registered) from proprietary catalog-internal standards
 
-### Nominal vs. Actual Dimensions
-Products declare both `nominal_dimensions` (the grid footprint the configurator reserves for snapping and placement, including chase zone allowances) and `bounding_box` (the physical shipping envelope as manufactured). This distinction is essential for factory-finished pods that carry MEP services on their exterior faces.
+A `.cto` element file declares conformance to one or more `.cis` files via the `declares_interface` block. The CIS file is the source of truth for connection-plane specifics; the CTO file is the source of truth for product-specific geometry, lifecycle, and the rotation-lock binding between product faces and CIS sides.
 
-### Chase Zones
-A protected volume on the exterior face of a pod where MEP services are mounted for factory inspection access. When two pods are placed adjacently with opposing chase zones, the combined gap forms a service chase without additional framing. Chase zones are declared in the product `geometry` block.
+---
 
-### Chain of Custody
-The documented sequence of handoffs tracking a product instance from factory release through acceptance. Six party types are defined:
+## Why two specifications?
 
-| Party Type | Role |
-|---|---|
-| `manufacturer` | Fabricates and releases from factory |
-| `logistics_company` | Transports to jobsite |
-| `gc_accepting_shipping` | Receives and signs for delivery |
-| `hoisting_company` | Crane and rigging services |
-| `pod_installer` | Installs volumetric pod units (MEP trades) |
-| `panel_installer` | Installs structural panels (structural trades) |
+In v0.1.x, the CTO spec attempted to carry connection interface details directly within product definitions — port positions, gender assignments, MEP connection geometry, all in the product schema. This worked for simple cases but broke down as soon as real catalog authoring revealed:
 
-Each party block carries name, address, website, contact, license number, and a structured `insurer` object (carrier name, policy number, coverage type, expiration date).
+- **Connection topology varies by material.** PEX uses barb-to-barb pairing with intermediate pipe; copper uses male-to-female threaded joints; PVC uses slip couplings or rubber boots. A single `gender` field can't express this richness.
+- **Standards bodies and product manufacturers have different evolution cadences.** CfOC publishes interface standards on its own schedule; manufacturers update product catalogs on theirs. Coupling the two in a single spec creates artificial coordination overhead.
+- **Open standards and proprietary standards coexist.** A pod might use an open CfOC standard for its building-services interface AND a proprietary catalog-internal standard for its pod-to-pod interface. Both deserve first-class machinery.
 
-### Interface Standards and CIS Files
-CfOC-published specifications (e.g., CfOC-ICC-1220, CfOC-ICC-1230) define connection geometry and performance requirements. In v0.1.5, products reference these standards via `interface_roles` — declaring which geometric face of the product addresses which named side of the standard (e.g., `dwelling_unit_side` vs. `building_services_side`). The engineering details live in external `.cis` files referenced by URL, keeping element files lightweight.
+Splitting connection interface definitions into a separate `.cis` file format solves all three problems. The CTO spec becomes simpler (focused on products and assemblies); the CIS spec becomes possible (a place to publish and version connection standards independently); and the relationship between them is explicit.
 
-### Floor Levels, Level Datums, and Stairwell Volumes
-Multi-story configurations use a `floor_levels` array to define abstract vertical planes (replacing bare `story` integers). In v0.1.6, the new `level_datums` array elevates levels to first-class abstract hosts: each datum declares a `z_origin_ft` that can auto-derive from the level below (ceiling height + cartridge thickness), with user-overridable values and red conflict warnings. Roof datums reference the new roof prism geometry. The v0.1.5 `floor_levels` is retained for backward compatibility. Stairwell volumes (upgraded from v0.1.5 conceptual objects) are now first-class hosting elements for prefab staircases, interior furring wall cartridges, and shortened floor cartridges.
+---
 
-### Entourage Elements
-Entourage elements are non-structural, non-priced visual elements placed in a configuration to aid scale comprehension. They render in 2D as detailed architectural-convention linework (referenced SVG files) and in 3D as furniture models (referenced GLB files). Each entourage is a pre-composed group of sub-elements (e.g., a "King Bedroom" contains a bed + 2 nightstands as one draggable unit). Entourage files use `cto_type: "entourage"` and are excluded from pricing, BOM, scheduling, and chain of custody.
+## Repository structure
 
-### Roof Prism
-The roof prism defines the three-dimensional roof geometry as a prismatic solid hosted to a roof-type level datum. The hypotenuse faces downward; two sloped faces rise to a ridge spanning the full building length. Roof panels are hosted to the sloped faces with pitch compatibility checking. Panels may extend beyond eave lines for overhangs. Gable end triangles are handled by wall panels, keeping the roof and wall systems independent.
+```
+configurator-file-type-spec/
+├── README.md                              ← this file
+├── CONTRIBUTING.md                        ← how to contribute
+├── LICENSE                                ← Apache 2.0
+├── cto-file-format-intro.md               ← prose introduction to CTO
+├── web-content-cto-file-format.md         ← FoD&D website content
+├── spec/
+│   ├── CHANGELOG.md                       ← version history (both specs)
+│   ├── cto/
+│   │   ├── v0.1/specification.md          ← CTO v0.1.6 (preserved)
+│   │   └── v0.2/specification.md          ← CTO v0.2.0 (current)
+│   └── cis/
+│       ├── v0.1/specification.md          ← CIS v0.1.3 (current)
+│       └── history/                       ← intermediate drafts
+│           ├── v0.1.0/specification.md
+│           ├── v0.1.1/specification.md
+│           └── v0.1.2/specification.md
+└── examples/
+    └── cis/
+        └── CfOC-ICC-1220-v0.2.0.cis      ← first example CIS file
+```
 
-### Legal Mateline
-The boundary at which a product transitions from goods (governed by UCC Article 2) to real property (governed by Common Law). This transition occurs at acceptance and is explicitly documented in the chain of custody.
+The CTO and CIS specs live as siblings under `spec/`. Each spec uses per-MAJOR-version subfolders (`v0.1/`, `v0.2/`) holding the latest patch release of that minor version. Pre-release CIS drafts (v0.1.0 through v0.1.2) are preserved in `spec/cis/history/` as a historical artifact of the design conversation that produced v0.1.3.
 
-## Technical Details
+---
 
-### File Format
-- **Extension**: `.cto`
-- **Encoding**: UTF-8 JSON
-- **Compression**: Optional gzip (`.cto.gz`)
-- **MIME Type**: `application/vnd.cfoc.cto+json`
+## Getting started
 
-### 3D Asset Standard
-GLB (Binary GLTF) files associated with `.cto` elements MUST:
-- Be scaled to meters (1 unit = 1 meter, per glTF 2.0)
-- Use Y-Up orientation
-- Register the South-West-Bottom (SWB) corner of the product at world origin `[0, 0, 0]`
-- Project depth along the negative Z-axis
+**If you're a software developer building a CTO parser or configurator:**
+Start with the CTO spec ([`spec/cto/v0.2/specification.md`](spec/cto/v0.2/specification.md)). Read §1.6 for the relationship to CIS, then §3-§7 for the schema and validation rules. The CIS spec ([`spec/cis/v0.1/specification.md`](spec/cis/v0.1/specification.md)) is normative for any CIS files referenced by CTO files; conformant parsers must be able to parse them.
 
-### Scope
-The current specification covers:
-- Single-family residential configurations (v0.1+)
-- Multi-family residential configurations (v0.1.1+)
-- Commercial configurations (planned for v0.2.0)
+**If you're a standards engineer authoring a connection standard:**
+Read the CIS spec ([`spec/cis/v0.1/specification.md`](spec/cis/v0.1/specification.md)) end-to-end. The CIS spec §15 explains the relationship to CTO files. The example file at [`examples/cis/CfOC-ICC-1220-v0.2.0.cis`](examples/cis/CfOC-ICC-1220-v0.2.0.cis) is the canonical reference for what a fully-conformant CIS file looks like.
 
-### Validation
-A CTO file is valid if it:
-- Conforms to the schema definition
-- Passes all validation rules
-- Has referential integrity (all references exist)
-- Satisfies all constraints (spatial, structural, interface, orientation)
-- Maintains chain of custody consistency (if fulfillment plan is present)
+**If you're a manufacturer authoring an element file (a `.cto` file with `cto_type: "element"`):**
+Read CTO spec §4.1a (cto_type), §4.2 (element_meta), §4.2a (declares_interface), and §5 (Product Library Schema). Then read CIS spec §15 (Relationship to the CTO File Format) for the division of labor between the two file types.
 
-## Standards & References
+**If you're a decision-maker (manufacturer leadership, AHJ, building official) evaluating these formats for adoption:**
+Read [`cto-file-format-intro.md`](cto-file-format-intro.md) for a prose overview that does not require parsing JSON schemas. Then skim CTO spec §1 and §2 (Introduction and Design Principles).
 
-The CTO specification references and is designed to interoperate with:
+---
 
-| Standard | Organization | Relevance |
-|----------|--------------|-----------|
-| CfOC-ICC-1220 | CfOC/ICC | Module-to-module connectivity |
-| CfOC-ICC-1230 | CfOC/ICC | Panel-to-panel connectivity |
-| ICC/MBI-1200 | ICC/MBI | Off-site construction requirements |
-| ICC/MBI-1205 | ICC/MBI | Off-site inspection and compliance |
-| UCC Article 2 | ULC | Sale of goods |
-| IFC 4.3 | buildingSMART | Building information model exchange |
+## Design philosophy
 
-## How to Contribute
+A new design principle was added in CTO v0.2.0 (§2.8) that we want to call out here: **specifications must speak to humans as well as to parsers**. Three audiences read these specs — software developers, standards engineers, and decision-makers — and schema definitions alone serve only the first.
 
-We welcome contributions from:
-- **Manufacturers** proposing product enhancements
-- **Software vendors** implementing the specification
-- **Researchers** studying off-site construction
-- **Industry professionals** with implementation feedback
+Every section, block, and field benefits from prose that explains its purpose, scope, and explicit exclusions in plain language. Where a concept has counterintuitive scope — for example, `clearance_zones` describes *external* clearance only, not internal product operations — the spec makes this explicit. When in doubt, we write more prose, not less.
 
-### Ways to Contribute
-1. **Open an Issue** — Discuss a proposed change or report a problem
-2. **Submit a Pull Request** — Propose edits to the specification
-3. **Share Examples** — Contribute example CTO files
-4. **Provide Feedback** — Help us improve clarity and usability
+This principle applies to contributions: when proposing changes to either spec, please draft prose-first and JSON-second.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution process. Issues and pull requests are welcome at:
+https://github.com/Jason-Van-Nest/configurator-file-type-spec
+
+---
 
 ## License
 
-This specification is released under the **MIT license**.
+Both specifications are released under the [Apache License 2.0](LICENSE). Implementations may be commercially proprietary or open source; the specifications themselves are open.
 
-See [LICENSE](LICENSE) for details.
+---
 
-## Contact & Support
+## Editors and contributors
 
-- **Issues & Discussions**: Use [GitHub Issues](https://github.com/Jason-Van-Nest/configurator-file-type-spec/issues) to report problems or propose changes
-- **Questions**: Open a [GitHub Discussion](https://github.com/Jason-Van-Nest/configurator-file-type-spec/discussions) (if enabled)
-- **Direct Contact**: [Submit feedback](https://github.com/Jason-Van-Nest/configurator-file-type-spec/issues/new)
-
-## Roadmap
-
-| Milestone | Status | Target Date |
-|-----------|--------|-------------|
-| v0.1.5 Release | ✅ Complete | April 2026 |
-| v0.1.6 Release (Entourage, Level Datums, Roof Prism, Stairwell Upgrade) | ✅ Complete | April 2026 |
-| Seed Library (LBS Urban Minimalist) | ✅ Complete | April 2026 |
-| Validation Suite | 🔄 In Progress | 2026 |
-| CIS File Type Specification | 🔄 In Progress | 2026 |
-| Reference Implementation | 📋 Planned | 2026 |
-| v0.2.0 (Multi-Family + Commercial Scope) | 📋 Planned | 2027 |
-
-## Related Projects
-
-- **[cto-validator](https://github.com/cfoc/cto-validator)** — Reference validation suite
-- **CfOC Standards** — https://centerforoffsiteconstruction.org/standards/
-- **Logic Building Systems** — https://buildwithlogic.com
-
-## Document Information
-
-**Specification Authors:**
+**Editors:**
 - Jason Van Nest, Center for Offsite Construction
 - Mathew Ford, Center for Offsite Construction
 
@@ -200,14 +143,6 @@ See [LICENSE](LICENSE) for details.
 - Michael Nolan, CfOC BIM/VDC Research Fellow
 - Steve DeWitt, CfOC Senior Research Fellow
 - Sam Williams, CfOC Senior Research Fellow
-- Connor Baily, CfOC Senior Research Fellow, DPR Construction
-- Edward Palka, CfOC Senior Research Fellow, CLAE
 
-**Copyright:**
-© 2026 Center for Offsite Construction
-
----
-
-**Last Updated:** April 17, 2026
-
-For the latest updates, visit: https://github.com/Jason-Van-Nest/configurator-file-type-spec
+**Acknowledgments:**
+The v0.2.0 / v0.1.3 paired release was driven by the authoring of the first real CIS files (CfOC-ICC-1220 v0.2.0) and the first element file (LBS K01-UM kitchen pod), which surfaced 22 spec observations during a single intensive session. Approximately one-third of those observations are addressed in v0.2.0; the remainder are tracked for future releases.
