@@ -1,0 +1,296 @@
+{
+  "cis_format_version": "0.1.3",
+  "id": "CfOC-ICC-1220",
+  "standard_version": "0.2.0",
+  "name": "Module-to-Building-Services Core Utility Interface",
+  "description": "CfOC-ICC-1220 governs the core-services utility handshake for interior volumetric modules: water supply (cold required, hot optional), sanitary drain, plumbing vent, primary electrical feed, optional data, and small-bore exhaust ducts (dryer and bath fan, both required). It does NOT govern conditioned HVAC supply/return air, which is handled at the building perimeter via separate standards (such as a future CfOC-ICC-1221). Structural handshake between the module and the building is handled separately by CfOC-ICC-1220-S. Products declaring 1220 conformance commit to this exact bundle of core utilities at the locations specified herein.",
+
+  "publisher": {
+    "name": "Center for Offsite Construction",
+    "organization_type": "standards_body",
+    "website": "https://centerforoffsiteconstruction.org",
+    "contact": {
+      "name": "Standards Committee",
+      "email": "standards@centerforoffsiteconstruction.org"
+    }
+  },
+
+  "published_date": "2026-04-19",
+  "status": "draft",
+  "registry_scope": "open_standard",
+  "registry_url": "https://centerforoffsiteconstruction.org/standards/CfOC-ICC-1220-v0.2.0.cis",
+  "license": "Apache-2.0",
+  "checksum": "sha256:TODO-compute-after-finalization",
+
+  "supersedes": "CfOC-ICC-1220@0.1.1",
+  "superseded_by": null,
+
+  "compatibility": {
+    "compatible_with": ["0.2.0"],
+    "breaking_changes_from": "0.1.1",
+    "forward_compatible": false,
+    "description": "v0.2.0 is the first version conforming to CIS mini-spec v0.1.3. It is not backward-compatible with v0.1.1 (which used the deprecated `gender` field, had no port geometry, and lacked structural separation). Products previously conforming to v0.1.1 must be re-evaluated against the v0.2.0 port layout and signature registry."
+  },
+
+  "sides": {
+    "dwelling_unit_side": {
+      "description": "Side of the connection plane addressed by a volumetric dwelling module (pod). Ports on this side face into the dwelling. This is the authoritative side; the building_services_side mirrors its port layout per CIS mini-spec §6.4.",
+      "envelope": {
+        "nominal_width_in": 6.0,
+        "nominal_height_in": 92.5,
+        "clearance_depth_in": 14.0,
+        "description": "The face envelope is the rectangular zone on the side within which all port centerlines must reside. Port outer diameters may extend slightly beyond the envelope (notably for sanitary drain at y=2.0 and the lowest dryer/bath exhaust positions). Clearance depth (14 inches behind the face) must be kept free of obstructions for installation access."
+      },
+      "mirror_of": null,
+      "notes": "All port positions on this side are authoritative and measured in inches from the bottom-left corner of the envelope, viewed from outside the dwelling looking in toward the dwelling. The building_services_side mirrors these positions across the vertical centerline (x = 3.0)."
+    },
+    "building_services_side": {
+      "description": "Side of the connection plane addressed by building services \u2014 either via a site-built utility stub assembly framed by the GC, or via a Logic Coupler or panel-embedded coupler product. Ports on this side face out from the building services into the dwelling unit.",
+      "envelope": {
+        "nominal_width_in": 6.0,
+        "nominal_height_in": 92.5,
+        "clearance_depth_in": 14.0
+      },
+      "mirror_of": "dwelling_unit_side",
+      "notes": "Ports on this side are computed by the validator from the dwelling_unit_side port layout, with signature complementarity per CIS mini-spec §6.4. Same-to-same signatures (pex_barb, pvc_rubber_boot) are preserved; gendered signatures (electrical_lug_M, hvac_duct_collar_M, rj45_jack) are inverted (becoming electrical_lug_F, hvac_duct_collar_F, rj45_plug)."
+    }
+  },
+
+  "ports": [
+    {
+      "port_id": "cold_water_supply",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 1.5, "y": 90.0 },
+      "tolerance_in": { "x": 0.25, "y": 0.25 },
+      "category": "utility",
+      "utility_connection_ref": "cold_water_supply_utility",
+      "direction": "ingress",
+      "connection_signature": "pex_barb",
+      "required": true,
+      "description": "Cold water supply port. PEX B with brass barbed fitting. Position 1.5 inches from the left edge, 90 inches from the bottom (top zone of the envelope, paired beside hot water at x=3.0)."
+    },
+    {
+      "port_id": "hot_water_supply",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 3.0, "y": 90.0 },
+      "tolerance_in": { "x": 0.25, "y": 0.25 },
+      "category": "utility",
+      "utility_connection_ref": "hot_water_supply_utility",
+      "direction": "ingress",
+      "connection_signature": "pex_barb",
+      "required": false,
+      "description": "Hot water supply port. PEX B with brass barbed fitting. Optional \u2014 dry-utility-only modules (e.g., a closet pod) may omit hot water supply. Per CIS mini-spec §6.5 rule 4, an unmated hot_water_supply port is silently terminated at manufacturing."
+    },
+    {
+      "port_id": "plumbing_vent",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 3.0, "y": 83.5 },
+      "tolerance_in": { "x": 0.25, "y": 0.25 },
+      "category": "utility",
+      "utility_connection_ref": "plumbing_vent_utility",
+      "direction": "egress",
+      "connection_signature": "TODO_pvc_slip_or_rubber_boot_pending_mathew",
+      "required": true,
+      "description": "Plumbing vent stack. 3 inch PVC Schedule 40. Position 3.0 inches from left edge, 83.5 inches from bottom (centerline 9 inches from top of envelope). TODO: confirm with Mathew whether the vent uses pvc_slip_M/F (solvent-cement, permanent) or pvc_rubber_boot (mechanical, serviceable). Solvent-cement is more typical for residential vent stacks; rubber boot is preferred when factory serviceability is a priority."
+    },
+    {
+      "port_id": "dryer_exhaust",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 1.5, "y": 85.0 },
+      "tolerance_in": { "x": 0.25, "y": 0.25 },
+      "category": "utility",
+      "utility_connection_ref": "dryer_exhaust_utility",
+      "direction": "egress",
+      "connection_signature": "hvac_duct_collar_M",
+      "required": true,
+      "description": "Dryer exhaust duct. 4 inch rigid duct. Position 1.5 inches from left edge, 85 inches from bottom (upper zone, grouped with bath fan exhaust). Note: the hvac_duct_collar_M signature is being used here for an exhaust application; CIS mini-spec v0.1.4 will likely add a dedicated exhaust_duct_collar_M/F signature pair to disambiguate from supply/return HVAC. Until then, the description field carries the exhaust intent."
+    },
+    {
+      "port_id": "bath_fan_exhaust",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 3.0, "y": 85.0 },
+      "tolerance_in": { "x": 0.25, "y": 0.25 },
+      "category": "utility",
+      "utility_connection_ref": "bath_fan_exhaust_utility",
+      "direction": "egress",
+      "connection_signature": "hvac_duct_collar_M",
+      "required": true,
+      "description": "Bath fan exhaust duct. 4 inch rigid duct. Position 3.0 inches from left edge, 85 inches from bottom (upper zone, grouped with dryer exhaust). Same signature note as dryer_exhaust."
+    },
+    {
+      "port_id": "primary_electrical_feed",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 4.5, "y": 45.0 },
+      "tolerance_in": { "x": 0.25, "y": 0.25 },
+      "category": "utility",
+      "utility_connection_ref": "primary_electrical_feed_utility",
+      "direction": "ingress",
+      "connection_signature": "electrical_lug_M",
+      "required": true,
+      "description": "Primary electrical feed. 240V split-phase, 100A. Two 4 AWG hot conductors plus neutral plus ground, terminating in male electrical lugs for direct lug-to-lug termination at the building services side."
+    },
+    {
+      "port_id": "data_ethernet",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 4.5, "y": 50.0 },
+      "tolerance_in": { "x": 0.25, "y": 0.25 },
+      "category": "data",
+      "utility_connection_ref": "data_ethernet_utility",
+      "direction": "bidirectional",
+      "connection_signature": "rj45_jack",
+      "required": false,
+      "description": "Data ethernet port. RJ45 jack. Optional \u2014 modules without data needs (e.g., simple bath pod) may omit. No specific cable category required at this standard level; downstream equipment determines whether Cat5e, Cat6, or Cat6a is needed."
+    },
+    {
+      "port_id": "sanitary_drain",
+      "side": "dwelling_unit_side",
+      "position_in": { "x": 1.5, "y": 2.0 },
+      "tolerance_in": { "x": 0.5, "y": 0.5 },
+      "category": "utility",
+      "utility_connection_ref": "sanitary_drain_utility",
+      "direction": "egress",
+      "connection_signature": "pvc_rubber_boot",
+      "required": true,
+      "description": "Sanitary drain. 4 inch PVC Schedule 40 (ASTM D2665). Position centerline at x=1.5 inches, y=2.0 inches from bottom. Note: the 4 inch pipe outer diameter (~4.5 inches OD) extends slightly below the envelope bottom; this is accommodated by the 14 inch clearance depth and is normal for low-mounted drain stubs. Tolerance is wider than for supply lines (0.5 inches vs 0.25 inches) to accommodate field-installed rubber boot positioning."
+    }
+  ],
+
+  "utility_connections": [
+    {
+      "utility_id": "cold_water_supply_utility",
+      "type": "cold_water",
+      "requirement": {
+        "pressure_psi_min": 45,
+        "pressure_psi_max": 60,
+        "pipe_spec": "1 inch PEX B",
+        "pipe_standard": "ASTM F876",
+        "fitting": "Brass Barbed",
+        "fitting_standard": "ASTM F1807",
+        "method": "Clamp & Crimp",
+        "method_standard": "ASTM F1960"
+      },
+      "intermediate_connector": {
+        "type": "pex_pipe",
+        "spec": "1 inch PEX B",
+        "spec_standard": "ASTM F876",
+        "length_variable": true,
+        "length_max_in": 24,
+        "termination_method": "stainless steel crimp ring at each end (ASTM F1807) or copper clamp (ASTM F1960)",
+        "description": "A length of 1 inch PEX B pipe joins the two pex_barb ports. Length is field-determined based on the gap between the dwelling-unit-side and building-services-side faces."
+      }
+    },
+    {
+      "utility_id": "hot_water_supply_utility",
+      "type": "hot_water",
+      "requirement": {
+        "pressure_psi_min": 45,
+        "pressure_psi_max": 60,
+        "pipe_spec": "1 inch PEX B",
+        "pipe_standard": "ASTM F876",
+        "fitting": "Brass Barbed",
+        "fitting_standard": "ASTM F1807",
+        "method": "Clamp & Crimp",
+        "method_standard": "ASTM F1960",
+        "max_temperature_f": 180
+      },
+      "intermediate_connector": {
+        "type": "pex_pipe",
+        "spec": "1 inch PEX B",
+        "spec_standard": "ASTM F876",
+        "length_variable": true,
+        "length_max_in": 24,
+        "termination_method": "stainless steel crimp ring at each end (ASTM F1807) or copper clamp (ASTM F1960)",
+        "description": "Same as cold water intermediate. PEX B is rated for hot water service up to 180\u00b0F per ASTM F876."
+      }
+    },
+    {
+      "utility_id": "plumbing_vent_utility",
+      "type": "vent",
+      "requirement": {
+        "pipe_spec": "3 inch PVC Schedule 40",
+        "pipe_standard": "ASTM D2665",
+        "fitting": "TODO: confirm with Mathew \u2014 solvent-cement slip joint or rubber band-clamp boot",
+        "fitting_standard": "ASTM D2855 (solvent cement) OR Fernco/equivalent (rubber boot)",
+        "method": "TODO: per fitting choice"
+      },
+      "intermediate_connector": {
+        "type": "TODO_pending_signature_choice",
+        "description": "Intermediate connector applies only if signature is pvc_rubber_boot. If signature is pvc_slip_M/F, no intermediate is needed (direct slip joint)."
+      }
+    },
+    {
+      "utility_id": "dryer_exhaust_utility",
+      "type": "hvac_exhaust",
+      "requirement": {
+        "duct_spec": "4 inch rigid metal duct",
+        "duct_standard": "UL 181 listed for dryer exhaust",
+        "fitting": "Sheet metal collar with foil tape and #8 sheet metal screws",
+        "method": "Slip and tape",
+        "code_standard": "IRC M1502 (Clothes Dryer Exhaust)"
+      }
+    },
+    {
+      "utility_id": "bath_fan_exhaust_utility",
+      "type": "hvac_exhaust",
+      "requirement": {
+        "duct_spec": "4 inch rigid metal duct (or insulated flex equivalent within the building services side)",
+        "duct_standard": "UL 181 listed",
+        "fitting": "Sheet metal collar with foil tape and #8 sheet metal screws",
+        "method": "Slip and tape",
+        "code_standard": "ASHRAE 62.2 (Ventilation for Acceptable Indoor Air Quality)",
+        "min_cfm": 50
+      }
+    },
+    {
+      "utility_id": "primary_electrical_feed_utility",
+      "type": "electrical",
+      "requirement": {
+        "supply": "240V split-phase",
+        "amperage_amps": 100,
+        "conductor_spec": "Two 4 AWG hot conductors, one 4 AWG neutral, one 8 AWG ground (minimum sizing per NEC 310.16 for 100A service at 75\u00b0C terminations)",
+        "termination": "Mechanical lugs, torque per manufacturer spec",
+        "code_standard": "NEC (NFPA 70) Article 230 (Services) and Article 250 (Grounding)",
+        "ahj_inspection_required": true
+      }
+    },
+    {
+      "utility_id": "data_ethernet_utility",
+      "type": "data",
+      "requirement": {
+        "interface": "RJ45 jack (8P8C)",
+        "cable_category_minimum": "TODO: defer to product-level spec; minimum is Cat5e",
+        "code_standard": "TIA-568"
+      }
+    },
+    {
+      "utility_id": "sanitary_drain_utility",
+      "type": "sanitary",
+      "requirement": {
+        "pipe_spec": "4 inch PVC Schedule 40",
+        "pipe_standard": "ASTM D2665",
+        "fitting": "Rubber Fitting w/ Stainless Steel Band Clamps (Fernco-style)",
+        "fitting_standard": "ASTM C1173",
+        "method": "Slip and clamp",
+        "slope_required": "1/4 inch per foot minimum (downstream of this connection plane, on the building services side)",
+        "code_standard": "IPC Chapter 7 / IRC P3005"
+      },
+      "intermediate_connector": {
+        "type": "rubber_boot_with_band_clamps",
+        "spec": "4 inch ID rubber fitting with two stainless steel band clamps",
+        "spec_standard": "ASTM C1173",
+        "length_variable": false,
+        "length_typical_in": 4.5,
+        "termination_method": "Band clamp on each end, torqued per manufacturer spec",
+        "description": "Standard Fernco-style rubber boot with band clamps at each end. The boot accommodates minor misalignment between the two pvc_rubber_boot pipe ends."
+      }
+    }
+  ],
+
+  "structural_connections": [],
+
+  "tolerances": {
+    "global_position_in": 0.25,
+    "global_envelope_alignment_in": 0.5,
+    "description": "Per-port tolerances override the global default. Sanitary drain has expanded tolerance (0.5 inches) to accommodate field-installed rubber boot positioning. Default 0.25 inches applies to all other ports."
+  }
+}
